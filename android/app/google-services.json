@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "439131287397",
+    "project_id": "viaauth",
+    "storage_bucket": "viaauth.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:439131287397:android:e44efdb5029f37db7dbb8c",
+        "android_client_info": {
+          "package_name": "com.viaveri.vialearn_flutter"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCkgwKUn1_sGpiMuIiXfPAIe9YvUx0coog"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
