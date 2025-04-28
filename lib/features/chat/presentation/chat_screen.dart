@@ -26,6 +26,11 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _isLoading = false;
   String _userName = "";
 
+  bool _notesButtonActive = false;
+  File? _selectedFile;
+  String? _selectedFileName;
+  int? _selectedFileSize;
+
   @override
   void initState() {
     super.initState();
@@ -43,24 +48,37 @@ class _ChatScreenState extends State<ChatScreen> {
 
   void _handleSend() async {
     final text = _inputController.text.trim();
-    if (text.isEmpty) return;
+    if (text.isEmpty && _selectedFile == null) return;
 
-    setState(() {
-      _messages.add(ChatMessage(text: text, sender: 'user'));
-      _isLoading = true;
-    });
+    if (text.isNotEmpty) {
+      setState(() {
+        _messages.add(ChatMessage(text: text, sender: 'user'));
+        _isLoading = true;
+      });
+    }
 
     _inputController.clear();
     _scrollToBottom();
 
-    final response = await _chatService.send(text, _ragEnabled);
+    if (_selectedFile != null) {
+      final response = await _chatService.uploadPDF(_selectedFile!);
+      setState(() {
+        _messages.add(response);
+        _selectedFile = null;
+        _selectedFileName = null;
+        _selectedFileSize = null;
+      });
+      _scrollToBottom();
+    }
 
-    setState(() {
-      _messages.add(response);
-      _isLoading = false;
-    });
-
-    _scrollToBottom();
+    if (text.isNotEmpty) {
+      final response = await _chatService.send(text, _ragEnabled);
+      setState(() {
+        _messages.add(response);
+        _isLoading = false;
+      });
+      _scrollToBottom();
+    }
   }
 
   Future<void> _pickFile() async {
@@ -69,8 +87,26 @@ class _ChatScreenState extends State<ChatScreen> {
       allowedExtensions: ['pdf'],
     );
     if (result != null) {
-      final response = await _chatService.uploadPDF(File(result.files.single.path!));
-      setState(() => _messages.add(response));
+      setState(() {
+        _selectedFile = File(result.files.single.path!);
+        _selectedFileName = result.files.single.name;
+        _selectedFileSize = result.files.single.size;
+      });
+    }
+  }
+
+  void _handleNotesButtonClick() {
+    if (!_notesButtonActive) {
+      setState(() {
+        _notesButtonActive = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Upload your notes to ask questions.'), behavior: SnackBarBehavior.floating),
+      );
+    } else {
+      setState(() {
+        _notesButtonActive = false;
+      });
     }
   }
 
@@ -117,7 +153,7 @@ class _ChatScreenState extends State<ChatScreen> {
                     ? Text(
                         msg.text,
                         style: const TextStyle(
-                          color: Colors.white, // 🆕 User message text white
+                          color: Colors.white,
                           fontSize: 16,
                         ),
                       )
@@ -130,7 +166,7 @@ class _ChatScreenState extends State<ChatScreen> {
                               color: Colors.black87,
                               fontSize: 16,
                             ),
-                            speed: const Duration(milliseconds: 30), // Typing speed
+                            speed: const Duration(milliseconds: 30),
                           ),
                         ],
                       ),
@@ -194,23 +230,108 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
+  String _formatBytes(int bytes) {
+    if (bytes < 1024) return "$bytes B";
+    if (bytes < 1024 * 1024) return "${(bytes / 1024).toStringAsFixed(1)} KB";
+    return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
+  }
+
+  Widget _buildFilePreview() {
+    if (_selectedFileName == null) return const SizedBox.shrink();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.grey[200],
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 20),
+          const SizedBox(width: 6),
+          Flexible(
+            child: Text(
+              _selectedFileName!,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 14),
+            ),
+          ),
+          if (_selectedFileSize != null) ...[
+            const SizedBox(width: 6),
+            Text(
+              _formatBytes(_selectedFileSize!),
+              style: const TextStyle(fontSize: 12, color: Colors.black54),
+            ),
+          ],
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: () {
+              setState(() {
+                _selectedFile = null;
+                _selectedFileName = null;
+                _selectedFileSize = null;
+              });
+            },
+            child: const Icon(Icons.close, size: 18),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.all(10),
       color: AppColors.inputFill,
-      child: Row(
+      child: Column(
         children: [
-          IconButton(icon: const Icon(Icons.attach_file), onPressed: _pickFile),
-          Expanded(
-            child: TextField(
-              controller: _inputController,
-              decoration: const InputDecoration(
-                hintText: 'Type your message...',
-                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
-              ),
-            ),
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: _buildFilePreview(),
           ),
-          IconButton(icon: const Icon(Icons.send), onPressed: _handleSend),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _inputController,
+                  decoration: const InputDecoration(
+                    hintText: 'Type your message...',
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(20)),
+                    ),
+                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send),
+                onPressed: _handleSend,
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.attach_file),
+                onPressed: _pickFile,
+                tooltip: "Upload",
+              ),
+              ChoiceChip(
+                label: const Text('Notes'),
+                selected: _notesButtonActive,
+                onSelected: (_) => _handleNotesButtonClick(),
+                selectedColor: Colors.blueAccent,
+                backgroundColor: Colors.white,
+                labelStyle: TextStyle(
+                  color: _notesButtonActive ? Colors.white : Colors.black87,
+                  fontWeight: FontWeight.bold,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -236,24 +357,6 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildRagToggle() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      color: AppColors.inputFill,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text("SYNC OFF"),
-          Switch(
-            value: _ragEnabled,
-            onChanged: (v) => setState(() => _ragEnabled = v),
-          ),
-          const Text("SYNC ON"),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -273,7 +376,6 @@ class _ChatScreenState extends State<ChatScreen> {
               children: [
                 _buildHeader(),
                 Expanded(child: _buildChatMessages()),
-                _buildRagToggle(),
                 _buildInputBar(),
               ],
             ),
