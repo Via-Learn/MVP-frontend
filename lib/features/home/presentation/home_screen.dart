@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart'; // ⬅️ Import Firebase auth
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:http/http.dart' as http; //  http for API calls
+import 'dart:convert'; // for jsonDecode
 import '../../../core/constants/app_theme.dart'; // centralized colors
+import 'package:geolocator/geolocator.dart';
+
 
 class ViaHomePage extends StatefulWidget {
   const ViaHomePage({super.key});
@@ -11,26 +15,25 @@ class ViaHomePage extends StatefulWidget {
 }
 
 class _ViaHomePageState extends State<ViaHomePage> {
-  // Example Weather Data
-  String _weatherDescription = "Sunny";
-  double _temperature = 72;
+  String _weatherDescription = "Loading...";
+  double _temperature = 0;
   String _city = "East Lansing";
 
-  // Example Event Data
   List<Map<String, dynamic>> _events = [
     {'id': '1', 'title': 'CSE 491 Exam', 'start': '2:00 PM', 'end': '5:00 PM', 'location': 'Wells Hall'},
     {'id': '2', 'title': 'Team Meeting', 'start': '7:00 PM', 'end': '8:00 PM', 'location': 'Library'},
     {'id': '3', 'title': 'Grocery Run', 'start': '6:00 PM', 'end': '7:00 PM', 'location': 'Meijer'},
   ];
 
-  Set<String> _completedEvents = {}; // Set of completed event IDs
-  String _userName = ""; // ⬅️ Firebase user name
+  Set<String> _completedEvents = {};
+  String _userName = "";
 
   @override
   void initState() {
     super.initState();
     _loadCompletedEvents();
     _loadUserName();
+    _fetchWeather(); // ✅ fetch real weather
   }
 
   Future<void> _loadCompletedEvents() async {
@@ -44,16 +47,53 @@ class _ViaHomePageState extends State<ViaHomePage> {
     final user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       setState(() {
-        _userName = user.displayName ?? "User"; // fallback if no display name
+        _userName = user.displayName ?? "User";
       });
     }
   }
+
+  Future<void> _fetchWeather() async {
+  const String apiKey = '80f9429c61e3c82a194218ac1da86b6e'; // your real OpenWeatherMap key
+
+  try {
+    // Step 1: Request location permission
+    LocationPermission permission = await Geolocator.requestPermission();
+    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+      print("Location permission denied");
+      return;
+    }
+
+    // Step 2: Get current position
+    final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+
+    final double lat = position.latitude;
+    final double lon = position.longitude;
+
+    // Step 3: Fetch weather by coordinates
+    final url = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=imperial');
+
+    final response = await http.get(url);
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        _temperature = data['main']['temp'];
+        _weatherDescription = data['weather'][0]['description'];
+        _city = data['name'];
+      });
+    } else {
+      print("Failed to fetch weather: ${response.statusCode}");
+    }
+  } catch (e) {
+    print("Weather fetch error: $e");
+  }
+}
+
 
   Future<void> _toggleEventCompleted(String eventId) async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _completedEvents.add(eventId);
-      _events.removeWhere((event) => event['id'] == eventId); // 🆕 remove event when completed
+      _events.removeWhere((event) => event['id'] == eventId);
       prefs.setStringList('completedEvents', _completedEvents.toList());
     });
   }
@@ -81,7 +121,7 @@ class _ViaHomePageState extends State<ViaHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildHeader(), // 🆕 Logo + dynamic Username
+                  _buildHeader(),
                   const SizedBox(height: 20),
                   _buildWeatherCard(),
                   const SizedBox(height: 20),

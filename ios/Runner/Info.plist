@@ -60,5 +60,7 @@
 	<array>
 	<string>https</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to fetch weather information.</string>
 </dict>
 </plist>
