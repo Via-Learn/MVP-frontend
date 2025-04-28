@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../core/constants/app_theme.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/plan/presentation/plan_screen.dart'; // PlanPage
@@ -32,7 +33,7 @@ class _HomeShellState extends State<HomeShell> {
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onTabTapped,
-        selectedItemColor: Colors.blue,
+        selectedItemColor: AppColors.primary,
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(

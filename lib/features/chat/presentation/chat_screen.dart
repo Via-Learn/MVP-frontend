@@ -20,8 +20,8 @@ class _ChatScreenState extends State<ChatScreen> {
   final ChatService _chatService = ChatService();
   final TextEditingController _inputController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
-
   final List<ChatMessage> _messages = [];
+
   bool _ragEnabled = false;
   bool _isLoading = false;
   String _userName = "";
@@ -82,10 +82,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['pdf'],
-    );
+    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
     if (result != null) {
       setState(() {
         _selectedFile = File(result.files.single.path!);
@@ -96,17 +93,13 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleNotesButtonClick() {
-    if (!_notesButtonActive) {
-      setState(() {
-        _notesButtonActive = true;
-      });
+    setState(() {
+      _notesButtonActive = !_notesButtonActive;
+    });
+    if (_notesButtonActive) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Upload your notes to ask questions.'), behavior: SnackBarBehavior.floating),
       );
-    } else {
-      setState(() {
-        _notesButtonActive = false;
-      });
     }
   }
 
@@ -128,72 +121,35 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.all(10),
       itemCount: _messages.length + (_isLoading ? 1 : 0),
       itemBuilder: (context, index) {
-        if (_isLoading && index == _messages.length) {
-          return _loadingBubble();
-        }
+        if (_isLoading && index == _messages.length) return _loadingBubble();
 
         final msg = _messages[index];
         final isUser = msg.sender == 'user';
 
         return Align(
           alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Column(
-            crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-            children: [
-              Container(
-                margin: const EdgeInsets.symmetric(vertical: 5),
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: isUser
-                      ? AppColors.primary.withOpacity(1)
-                      : AppColors.inputFill.withOpacity(0.95),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: isUser
-                    ? Text(
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: isUser ? AppColors.primary : AppColors.surface,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: isUser
+                ? Text(
+                    msg.text,
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                  )
+                : AnimatedTextKit(
+                    isRepeatingAnimation: false,
+                    animatedTexts: [
+                      TyperAnimatedText(
                         msg.text,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                        ),
-                      )
-                    : AnimatedTextKit(
-                        isRepeatingAnimation: false,
-                        animatedTexts: [
-                          TyperAnimatedText(
-                            msg.text,
-                            textStyle: const TextStyle(
-                              color: Colors.black87,
-                              fontSize: 16,
-                            ),
-                            speed: const Duration(milliseconds: 30),
-                          ),
-                        ],
+                        textStyle: const TextStyle(color: Colors.white70, fontSize: 16),
+                        speed: const Duration(milliseconds: 30),
                       ),
-              ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!isUser && msg.sources != null && msg.sources!.isNotEmpty)
-                    TextButton.icon(
-                      icon: const Icon(Icons.menu_book, size: 18, color: Colors.white),
-                      label: const Text("View Sources", style: TextStyle(color: Colors.white)),
-                      onPressed: () => _showSourcesModal(context, msg.sources!),
-                    ),
-                  IconButton(
-                    icon: const Icon(Icons.copy, size: 18, color: Colors.white),
-                    padding: EdgeInsets.zero,
-                    constraints: const BoxConstraints(),
-                    onPressed: () {
-                      Clipboard.setData(ClipboardData(text: msg.text));
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Copied to clipboard!')),
-                      );
-                    },
+                    ],
                   ),
-                ],
-              )
-            ],
           ),
         );
       },
@@ -207,25 +163,13 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.inputFill.withOpacity(0.95),
-          borderRadius: BorderRadius.circular(10),
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
         ),
         child: AnimatedTextKit(
           animatedTexts: [TyperAnimatedText("...", speed: const Duration(milliseconds: 200))],
           repeatForever: true,
         ),
-      ),
-    );
-  }
-
-  void _showSourcesModal(BuildContext context, List<String> sources) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: sources.length,
-        separatorBuilder: (_, __) => const Divider(),
-        itemBuilder: (context, index) => Text("• ${sources[index]}"),
       ),
     );
   }
@@ -242,11 +186,10 @@ class _ChatScreenState extends State<ChatScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.grey[200],
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(Icons.picture_as_pdf, color: Colors.redAccent, size: 20),
           const SizedBox(width: 6),
@@ -254,14 +197,14 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Text(
               _selectedFileName!,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14),
+              style: const TextStyle(fontSize: 14, color: Colors.white),
             ),
           ),
           if (_selectedFileSize != null) ...[
             const SizedBox(width: 6),
             Text(
               _formatBytes(_selectedFileSize!),
-              style: const TextStyle(fontSize: 12, color: Colors.black54),
+              style: const TextStyle(fontSize: 12, color: Colors.white60),
             ),
           ],
           const SizedBox(width: 8),
@@ -273,7 +216,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _selectedFileSize = null;
               });
             },
-            child: const Icon(Icons.close, size: 18),
+            child: const Icon(Icons.close, size: 18, color: Colors.white),
           ),
         ],
       ),
@@ -282,8 +225,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildInputBar() {
     return Container(
-      padding: const EdgeInsets.all(10),
-      color: AppColors.inputFill,
+      color: AppColors.surface,
+      padding: const EdgeInsets.all(12),
       child: Column(
         children: [
           AnimatedSwitcher(
@@ -295,17 +238,21 @@ class _ChatScreenState extends State<ChatScreen> {
               Expanded(
                 child: TextField(
                   controller: _inputController,
+                  style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     hintText: 'Type your message...',
+                    hintStyle: TextStyle(color: Colors.white54),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
                     ),
+                    filled: true,
+                    fillColor: AppColors.surface,
                     contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.send),
+                icon: const Icon(Icons.send, color: AppColors.secondary),
                 onPressed: _handleSend,
               ),
             ],
@@ -314,9 +261,8 @@ class _ChatScreenState extends State<ChatScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.attach_file),
+                icon: const Icon(Icons.attach_file, color: Colors.white),
                 onPressed: _pickFile,
-                tooltip: "Upload",
               ),
               ChoiceChip(
                 label: const Text('Notes'),
@@ -328,7 +274,6 @@ class _ChatScreenState extends State<ChatScreen> {
                   color: _notesButtonActive ? Colors.white : Colors.black87,
                   fontWeight: FontWeight.bold,
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
             ],
           ),
@@ -339,7 +284,8 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(16),
+      color: AppColors.background,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -347,9 +293,9 @@ class _ChatScreenState extends State<ChatScreen> {
           Text(
             _userName.isEmpty ? "..." : _userName,
             style: const TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+              color: AppColors.secondary, 
+              fontSize: 16, 
+              fontWeight: FontWeight.bold
             ),
           ),
         ],
@@ -360,25 +306,13 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
+        child: Column(
           children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.5,
-                  colors: [AppColors.gradientStart, AppColors.gradientEnd],
-                ),
-              ),
-            ),
-            Column(
-              children: [
-                _buildHeader(),
-                Expanded(child: _buildChatMessages()),
-                _buildInputBar(),
-              ],
-            ),
+            _buildHeader(),
+            Expanded(child: _buildChatMessages()),
+            _buildInputBar(),
           ],
         ),
       ),

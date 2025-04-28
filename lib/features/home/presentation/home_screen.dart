@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:http/http.dart' as http; //  http for API calls
-import 'dart:convert'; // for jsonDecode
-import '../../../core/constants/app_theme.dart'; // centralized colors
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-
+import '../../../core/constants/app_theme.dart'; // centralized colors
 
 class ViaHomePage extends StatefulWidget {
   const ViaHomePage({super.key});
@@ -17,7 +16,7 @@ class ViaHomePage extends StatefulWidget {
 class _ViaHomePageState extends State<ViaHomePage> {
   String _weatherDescription = "Loading...";
   double _temperature = 0;
-  String _city = "East Lansing";
+  String _city = "Fetching location...";
 
   List<Map<String, dynamic>> _events = [
     {'id': '1', 'title': 'CSE 491 Exam', 'start': '2:00 PM', 'end': '5:00 PM', 'location': 'Wells Hall'},
@@ -33,7 +32,7 @@ class _ViaHomePageState extends State<ViaHomePage> {
     super.initState();
     _loadCompletedEvents();
     _loadUserName();
-    _fetchWeather(); // ✅ fetch real weather
+    _fetchWeather();
   }
 
   Future<void> _loadCompletedEvents() async {
@@ -53,41 +52,33 @@ class _ViaHomePageState extends State<ViaHomePage> {
   }
 
   Future<void> _fetchWeather() async {
-  const String apiKey = '80f9429c61e3c82a194218ac1da86b6e'; // your real OpenWeatherMap key
+    const String apiKey = '80f9429c61e3c82a194218ac1da86b6e';
 
-  try {
-    // Step 1: Request location permission
-    LocationPermission permission = await Geolocator.requestPermission();
-    if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
-      print("Location permission denied");
-      return;
+    try {
+      LocationPermission permission = await Geolocator.requestPermission();
+      if (permission == LocationPermission.denied || permission == LocationPermission.deniedForever) {
+        print("Location permission denied");
+        return;
+      }
+
+      final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      final url = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=${position.latitude}&lon=${position.longitude}&appid=$apiKey&units=imperial');
+
+      final response = await http.get(url);
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          _temperature = data['main']['temp'];
+          _weatherDescription = data['weather'][0]['description'];
+          _city = data['name'];
+        });
+      } else {
+        print("Failed to fetch weather: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Weather fetch error: $e");
     }
-
-    // Step 2: Get current position
-    final position = await Geolocator.getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
-
-    final double lat = position.latitude;
-    final double lon = position.longitude;
-
-    // Step 3: Fetch weather by coordinates
-    final url = Uri.parse('https://api.openweathermap.org/data/2.5/weather?lat=$lat&lon=$lon&appid=$apiKey&units=imperial');
-
-    final response = await http.get(url);
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        _temperature = data['main']['temp'];
-        _weatherDescription = data['weather'][0]['description'];
-        _city = data['name'];
-      });
-    } else {
-      print("Failed to fetch weather: ${response.statusCode}");
-    }
-  } catch (e) {
-    print("Weather fetch error: $e");
   }
-}
-
 
   Future<void> _toggleEventCompleted(String eventId) async {
     final prefs = await SharedPreferences.getInstance();
@@ -101,40 +92,29 @@ class _ViaHomePageState extends State<ViaHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  center: Alignment.center,
-                  radius: 0.6,
-                  colors: [
-                    AppColors.gradientStart,
-                    AppColors.gradientEnd,
-                  ],
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 20),
+              _buildWeatherCard(),
+              const SizedBox(height: 20),
+              const Text(
+                "Today's Events",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildHeader(),
-                  const SizedBox(height: 20),
-                  _buildWeatherCard(),
-                  const SizedBox(height: 20),
-                  const Text(
-                    "Today's Events",
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
-                  const SizedBox(height: 10),
-                  Expanded(child: _buildEventsList()),
-                ],
-              ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Expanded(child: _buildEventsList()),
+            ],
+          ),
         ),
       ),
     );
@@ -153,9 +133,9 @@ class _ViaHomePageState extends State<ViaHomePage> {
         Text(
           _userName.isEmpty ? "..." : _userName,
           style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
+            color: AppColors.secondary, 
             fontSize: 16,
+            fontWeight: FontWeight.bold,
           ),
         ),
       ],
@@ -167,7 +147,7 @@ class _ViaHomePageState extends State<ViaHomePage> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.inputFill.withOpacity(0.95),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -179,12 +159,19 @@ class _ViaHomePageState extends State<ViaHomePage> {
             children: [
               Text(
                 "$_temperature°F • $_weatherDescription",
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 4),
               Text(
                 _city,
-                style: const TextStyle(fontSize: 14, color: Colors.black54),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.textSecondary,
+                ),
               ),
             ],
           ),
@@ -198,10 +185,14 @@ class _ViaHomePageState extends State<ViaHomePage> {
       return const Center(
         child: Text(
           "🎉 All events completed!",
-          style: TextStyle(color: Colors.white, fontSize: 18),
+          style: TextStyle(
+            fontSize: 18,
+            color: AppColors.textPrimary,
+          ),
         ),
       );
     }
+
     return ListView.builder(
       itemCount: _events.length,
       itemBuilder: (context, index) {
@@ -210,7 +201,7 @@ class _ViaHomePageState extends State<ViaHomePage> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.inputFill.withOpacity(0.95),
+            color: AppColors.surface,
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -226,12 +217,19 @@ class _ViaHomePageState extends State<ViaHomePage> {
                   children: [
                     Text(
                       event['title'],
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       "${event['start']} - ${event['end']}  •  ${event['location']}",
-                      style: const TextStyle(fontSize: 14, color: Colors.black54),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: AppColors.textSecondary,
+                      ),
                     ),
                   ],
                 ),
