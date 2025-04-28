@@ -9,6 +9,7 @@ class AppColors {
   static const Color gradientEnd = Color(0xFF695ABC);
   static const Color buttonText = Colors.white;
   static const Color inputFill = Colors.white;
+  static const Color buttonFill = Colors.black;
 }
 
 class AppTheme {

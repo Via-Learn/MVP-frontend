@@ -57,11 +57,11 @@ class _LoginScreenState extends State<LoginScreen> {
           child: SingleChildScrollView(
             child: Column(
               children: [
-                const SizedBox(height: 30),
-                Image.asset('assets/images/logo.png', height: 80),
+                const SizedBox(height: 20),
+                Image.asset('assets/images/logo.png', height: 60),
                 const SizedBox(height: 10),
-                Image.asset('assets/images/vialearn.png', height: 60),
-                const SizedBox(height: 40),
+                Image.asset('assets/images/vialearn.png', width: 250, height: 50, fit: BoxFit.contain),
+                const SizedBox(height: 30),
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(20),

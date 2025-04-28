@@ -2,9 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/constants/app_theme.dart'; // import centralized theme/colors
+import '../../../core/constants/app_theme.dart';
 import '../application/chat_service.dart';
 import '../domain/chat_message_model.dart';
 
@@ -23,6 +24,22 @@ class _ChatScreenState extends State<ChatScreen> {
   final List<ChatMessage> _messages = [];
   bool _ragEnabled = false;
   bool _isLoading = false;
+  String _userName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserName();
+  }
+
+  Future<void> _loadUserName() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _userName = user.displayName ?? "User";
+      });
+    }
+  }
 
   void _handleSend() async {
     final text = _inputController.text.trim();
@@ -48,7 +65,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom, 
+      type: FileType.custom,
       allowedExtensions: ['pdf'],
     );
     if (result != null) {
@@ -91,31 +108,53 @@ class _ChatScreenState extends State<ChatScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 5),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isUser 
-                      ? AppColors.primary.withOpacity(0.7) 
-                      : AppColors.inputFill,
+                  color: isUser
+                      ? AppColors.primary.withOpacity(1)
+                      : AppColors.inputFill.withOpacity(0.95),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: MarkdownBody(data: msg.text),
+                child: isUser
+                    ? Text(
+                        msg.text,
+                        style: const TextStyle(
+                          color: Colors.white, // 🆕 User message text white
+                          fontSize: 16,
+                        ),
+                      )
+                    : AnimatedTextKit(
+                        isRepeatingAnimation: false,
+                        animatedTexts: [
+                          TyperAnimatedText(
+                            msg.text,
+                            textStyle: const TextStyle(
+                              color: Colors.black87,
+                              fontSize: 16,
+                            ),
+                            speed: const Duration(milliseconds: 30), // Typing speed
+                          ),
+                        ],
+                      ),
               ),
               Row(
-                mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   if (!isUser && msg.sources != null && msg.sources!.isNotEmpty)
                     TextButton.icon(
-                      icon: const Icon(Icons.menu_book, size: 18),
-                      label: const Text("View Sources"),
+                      icon: const Icon(Icons.menu_book, size: 18, color: Colors.white),
+                      label: const Text("View Sources", style: TextStyle(color: Colors.white)),
                       onPressed: () => _showSourcesModal(context, msg.sources!),
                     ),
                   IconButton(
-                    icon: const Icon(Icons.copy, size: 18),
+                    icon: const Icon(Icons.copy, size: 18, color: Colors.white),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
                     onPressed: () {
                       Clipboard.setData(ClipboardData(text: msg.text));
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(content: Text('Copied to clipboard!')),
                       );
                     },
-                  )
+                  ),
                 ],
               )
             ],
@@ -132,7 +171,7 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.inputFill,
+          color: AppColors.inputFill.withOpacity(0.95),
           borderRadius: BorderRadius.circular(10),
         ),
         child: AnimatedTextKit(
@@ -184,9 +223,9 @@ class _ChatScreenState extends State<ChatScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-          const Text(
-            "Divya",
-            style: TextStyle(
+          Text(
+            _userName.isEmpty ? "..." : _userName,
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 16,
               fontWeight: FontWeight.bold,

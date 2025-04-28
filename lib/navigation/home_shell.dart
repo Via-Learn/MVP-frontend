@@ -1,9 +1,6 @@
-// home_shell.dart
 import 'package:flutter/material.dart';
 import '../features/chat/presentation/chat_screen.dart';
-import '../features/plan/presentation/plan_screen.dart';
-import '../features/submit/presentation/submit_screen.dart';
-import '../features/home/via_home.dart';
+import '../features/home/presentation/home_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -13,14 +10,11 @@ class HomeShell extends StatefulWidget {
 }
 
 class _HomeShellState extends State<HomeShell> {
-  int _selectedIndex = 1; // Default to Chat tab
+  int _selectedIndex = 0; // START at 0 (ViaChat)
 
-  // ❌ Remove `const` here to avoid runtime issues
   final List<Widget> _pages = [
-    const PlanPage(),
-    const ChatScreen(),
-    const SubmitPage(),
-    const ViaHomePage(), // ✅ Make sure this is declared properly
+    const ChatScreen(), // index 0
+    const ViaHomePage(), // index 1
   ];
 
   void _onTabTapped(int index) {
@@ -32,7 +26,7 @@ class _HomeShellState extends State<HomeShell> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: _pages[_selectedIndex],
+      body: _pages[_selectedIndex], // <- match index safely
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onTabTapped,
@@ -40,16 +34,8 @@ class _HomeShellState extends State<HomeShell> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.calendar_today),
-            label: 'ViaPlan',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.chat),
             label: 'ViaChat',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.upload_file),
-            label: 'ViaSubmit',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
