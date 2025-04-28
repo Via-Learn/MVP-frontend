@@ -1,5 +1,7 @@
-// explore_screen.dart
+// features/explore/presentation/explore_screen.dart
+
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_theme.dart'; // import the centralized theme/colors
 
 class ExploreScreen extends StatelessWidget {
   const ExploreScreen({super.key});
@@ -12,7 +14,7 @@ class ExploreScreen extends StatelessWidget {
           gradient: RadialGradient(
             center: Alignment.center,
             radius: 0.5,
-            colors: [Color(0xFF3498DB), Color(0xFF695ABC)],
+            colors: [AppColors.gradientStart, AppColors.gradientEnd], // centralized colors
           ),
         ),
         child: Center(
@@ -24,16 +26,10 @@ class ExploreScreen extends StatelessWidget {
               Image.asset('assets/images/vialearn.png', width: 300, height: 80, fit: BoxFit.contain),
               const SizedBox(height: 50),
               ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 30),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                  elevation: 5,
-                ),
                 onPressed: () => Navigator.pushNamed(context, '/signup'),
                 child: const Text(
                   'Sign Up / Log In',
-                  style: TextStyle(color: Color(0xFF4a90e2), fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
               ),
             ],

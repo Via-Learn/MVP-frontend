@@ -1,6 +1,6 @@
-// login_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import '../../../core/constants/app_theme.dart'; // <-- centralized theme
 import '../application/auth_service.dart';
 import '../../../core/widgets/gradient_background.dart';
 
@@ -66,7 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.inputFill, // centralized color
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -79,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           margin: const EdgeInsets.only(bottom: 15),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
+                            color: AppColors.inputFill, // centralized again
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
@@ -107,13 +107,9 @@ class _LoginScreenState extends State<LoginScreen> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleEmailLogin,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          fixedSize: const Size(120, 50),
-                        ),
-                        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Login'),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: AppColors.primary)
+                            : const Text('Login'),
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 10),
@@ -126,7 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
                           children: [
                             TextSpan(
                               text: 'Sign up',
-                              style: const TextStyle(color: Color(0xFF4C67F7), fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                               recognizer: TapGestureRecognizer()..onTap = () {
                                 Navigator.pushNamed(context, '/signup');
                               },

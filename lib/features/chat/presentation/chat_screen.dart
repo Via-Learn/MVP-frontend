@@ -1,10 +1,10 @@
-// presentation/chat_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../core/constants/app_theme.dart'; // import centralized theme/colors
 import '../application/chat_service.dart';
 import '../domain/chat_message_model.dart';
 
@@ -47,7 +47,10 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Future<void> _pickFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+    );
     if (result != null) {
       final response = await _chatService.uploadPDF(File(result.files.single.path!));
       setState(() => _messages.add(response));
@@ -88,7 +91,9 @@ class _ChatScreenState extends State<ChatScreen> {
                 margin: const EdgeInsets.symmetric(vertical: 5),
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: isUser ? const Color(0xFFafc6f1) : Colors.grey[200],
+                  color: isUser 
+                      ? AppColors.primary.withOpacity(0.7) 
+                      : AppColors.inputFill,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: MarkdownBody(data: msg.text),
@@ -127,7 +132,7 @@ class _ChatScreenState extends State<ChatScreen> {
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: Colors.grey[200],
+          color: AppColors.inputFill,
           borderRadius: BorderRadius.circular(10),
         ),
         child: AnimatedTextKit(
@@ -153,14 +158,17 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.all(10),
-      color: Colors.white,
+      color: AppColors.inputFill,
       child: Row(
         children: [
           IconButton(icon: const Icon(Icons.attach_file), onPressed: _pickFile),
           Expanded(
             child: TextField(
               controller: _inputController,
-              decoration: const InputDecoration(hintText: 'Type your message...'),
+              decoration: const InputDecoration(
+                hintText: 'Type your message...',
+                border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(20))),
+              ),
             ),
           ),
           IconButton(icon: const Icon(Icons.send), onPressed: _handleSend),
@@ -176,7 +184,14 @@ class _ChatScreenState extends State<ChatScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-          const Text("Divya", style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          const Text(
+            "Divya",
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );
@@ -185,12 +200,15 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget _buildRagToggle() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-      color: Colors.white,
+      color: AppColors.inputFill,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const Text("SYNC OFF"),
-          Switch(value: _ragEnabled, onChanged: (v) => setState(() => _ragEnabled = v)),
+          Switch(
+            value: _ragEnabled,
+            onChanged: (v) => setState(() => _ragEnabled = v),
+          ),
           const Text("SYNC ON"),
         ],
       ),
@@ -208,7 +226,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 gradient: RadialGradient(
                   center: Alignment.center,
                   radius: 0.5,
-                  colors: [Color(0xFF3498DB), Color(0xFF695ABC)],
+                  colors: [AppColors.gradientStart, AppColors.gradientEnd],
                 ),
               ),
             ),

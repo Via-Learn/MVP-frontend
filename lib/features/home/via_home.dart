@@ -1,5 +1,5 @@
-// via_home.dart
 import 'package:flutter/material.dart';
+import '../../../core/constants/app_theme.dart'; // <-- centralized theme/colors
 
 class ViaHomePage extends StatelessWidget {
   const ViaHomePage({super.key});
@@ -17,8 +17,8 @@ class ViaHomePage extends StatelessWidget {
                   center: Alignment.center,
                   radius: 0.5,
                   colors: [
-                    Color(0xFF3498DB),
-                    Color(0xFF695ABC),
+                    AppColors.gradientStart,
+                    AppColors.gradientEnd,
                   ],
                 ),
               ),
@@ -90,7 +90,7 @@ class ViaHomePage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: AppColors.inputFill.withOpacity(0.95), // centralized color for card background
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -103,7 +103,7 @@ class ViaHomePage extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: Colors.deepPurple, size: 30),
+          Icon(icon, color: AppColors.primary, size: 30), // centralized icon color
           const SizedBox(width: 12),
           Expanded(
             child: Column(

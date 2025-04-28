@@ -1,6 +1,6 @@
-// signup_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import '../../../core/constants/app_theme.dart';
 import '../application/auth_service.dart';
 import '../../../core/widgets/gradient_background.dart';
 
@@ -59,7 +59,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 24),
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: AppColors.inputFill,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Column(
@@ -72,7 +72,7 @@ class _SignupScreenState extends State<SignupScreen> {
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           margin: const EdgeInsets.only(bottom: 15),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF5F5F5),
+                            color: AppColors.inputFill,
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: Row(
@@ -100,13 +100,9 @@ class _SignupScreenState extends State<SignupScreen> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: _isLoading ? null : _handleEmailSignUp,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.black,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          fixedSize: const Size(120, 50),
-                        ),
-                        child: _isLoading ? const CircularProgressIndicator(color: Colors.white) : const Text('Sign up'),
+                        child: _isLoading
+                            ? const CircularProgressIndicator(color: AppColors.primary)
+                            : const Text('Sign up'),
                       ),
                       if (_errorMessage != null) ...[
                         const SizedBox(height: 10),
@@ -119,7 +115,10 @@ class _SignupScreenState extends State<SignupScreen> {
                           children: [
                             TextSpan(
                               text: 'Login',
-                              style: const TextStyle(color: Color(0xFF4C67F7), fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                color: AppColors.primary,
+                                fontWeight: FontWeight.bold,
+                              ),
                               recognizer: TapGestureRecognizer()..onTap = () {
                                 Navigator.pushNamed(context, '/login');
                               },

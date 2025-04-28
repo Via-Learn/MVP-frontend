@@ -1,7 +1,7 @@
-// features/plan/presentation/plan_screen.dart
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
+import '../../../core/constants/app_theme.dart'; // <-- centralized theme/colors
 import '../application/plan_service.dart';
 import '../domain/event_model.dart';
 
@@ -19,7 +19,10 @@ class _PlanPageState extends State<PlanPage> {
   List<EventModel> _events = [];
 
   Future<void> _pickAndUploadFile() async {
-    final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
+    final result = await FilePicker.platform.pickFiles(
+      type: FileType.custom, 
+      allowedExtensions: ['pdf'],
+    );
     if (result != null) {
       final file = File(result.files.single.path!);
       try {
@@ -60,7 +63,7 @@ class _PlanPageState extends State<PlanPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.95),
+        color: AppColors.inputFill.withOpacity(0.95), // centralized card background
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -71,13 +74,18 @@ class _PlanPageState extends State<PlanPage> {
               children: [
                 Text(event.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                 const SizedBox(height: 4),
-                Text("${event.type} — ${event.date}", style: const TextStyle(fontSize: 14, color: Colors.black54)),
+                Text(
+                  "${event.type} — ${event.date}",
+                  style: const TextStyle(fontSize: 14, color: Colors.black54),
+                ),
               ],
             ),
           ),
           IconButton(
-            icon: Icon(isAdded ? Icons.check_circle : Icons.add_circle_outline,
-                color: isAdded ? Colors.green : Colors.blue),
+            icon: Icon(
+              isAdded ? Icons.check_circle : Icons.add_circle_outline,
+              color: isAdded ? Colors.green : AppColors.primary, // use AppColors.primary
+            ),
             onPressed: isAdded ? null : () => _addToCalendar(event),
           ),
         ],
@@ -92,7 +100,14 @@ class _PlanPageState extends State<PlanPage> {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-          const Text("Divya", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+          const Text(
+            "Divya",
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+              fontSize: 16,
+            ),
+          ),
         ],
       ),
     );
@@ -101,7 +116,7 @@ class _PlanPageState extends State<PlanPage> {
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.all(10),
-      color: Colors.white,
+      color: AppColors.inputFill, // centralized input background
       child: Row(
         children: [
           IconButton(icon: const Icon(Icons.attach_file), onPressed: _pickAndUploadFile),
@@ -131,24 +146,29 @@ class _PlanPageState extends State<PlanPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Stack(children: [
-          Container(
-            decoration: const BoxDecoration(
-              gradient: RadialGradient(
-                center: Alignment.center,
-                radius: 0.5,
-                colors: [Color(0xFF3498DB), Color(0xFF695ABC)],
+        child: Stack(
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment.center,
+                  radius: 0.5,
+                  colors: [
+                    AppColors.gradientStart,
+                    AppColors.gradientEnd,
+                  ],
+                ),
               ),
             ),
-          ),
-          Column(
-            children: [
-              _buildHeader(),
-              Expanded(child: _buildEventList()),
-              _buildInputBar(),
-            ],
-          ),
-        ]),
+            Column(
+              children: [
+                _buildHeader(),
+                Expanded(child: _buildEventList()),
+                _buildInputBar(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

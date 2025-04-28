@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/constants/app_theme.dart'; // <-- centralized theme/colors
 import '../application/submit_service.dart';
 import '../domain/assignment_model.dart';
 
@@ -25,7 +26,10 @@ class SubmitPage extends StatelessWidget {
                       gradient: RadialGradient(
                         center: Alignment.center,
                         radius: 0.5,
-                        colors: [Color(0xFF3498DB), Color(0xFF695ABC)],
+                        colors: [
+                          AppColors.gradientStart,
+                          AppColors.gradientEnd,
+                        ],
                       ),
                     ),
                   ),
@@ -37,7 +41,14 @@ class SubmitPage extends StatelessWidget {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-                            const Text("Divya", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+                            const Text(
+                              "Divya",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                           ],
                         ),
                       ),
@@ -82,20 +93,26 @@ class SubmitPage extends StatelessWidget {
     Color badgeColor = switch (status.toLowerCase()) {
       'submitted' => Colors.green,
       'scheduled' => Colors.orange,
-      _ => Colors.grey
+      _ => Colors.grey,
     };
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      color: Colors.white.withOpacity(0.95),
+      color: AppColors.inputFill.withOpacity(0.95), // centralized card color
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Assignment: ${assignment.title}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            Text("Due: ${assignment.dueDate}", style: const TextStyle(fontSize: 14)),
+            Text(
+              "Assignment: ${assignment.title}",
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            Text(
+              "Due: ${assignment.dueDate}",
+              style: const TextStyle(fontSize: 14),
+            ),
             const SizedBox(height: 6),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -112,7 +129,10 @@ class SubmitPage extends StatelessWidget {
                   onPressed: () => controller.handleSubmit(courseId, index),
                   icon: const Icon(Icons.attach_file),
                   label: const Text("Upload"),
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.blue, foregroundColor: Colors.white),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.primary, // centralized button color
+                    foregroundColor: Colors.white,
+                  ),
                 )
               ],
             )
