@@ -5,7 +5,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:file_picker/file_picker.dart';
-import '../../../core/constants/app_theme.dart';
+import '../../../core/widgets/header.dart';
 import '../application/chat_service.dart';
 import '../domain/chat_message_model.dart';
 
@@ -98,7 +98,11 @@ class _ChatScreenState extends State<ChatScreen> {
     });
     if (_notesButtonActive) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Upload your notes to ask questions.'), behavior: SnackBarBehavior.floating),
+        const SnackBar(
+          content: Text('Upload your notes to ask questions.'),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 1),
+        ),
       );
     }
   }
@@ -116,6 +120,7 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildChatMessages() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return ListView.builder(
       controller: _scrollController,
       padding: const EdgeInsets.all(10),
@@ -132,20 +137,28 @@ class _ChatScreenState extends State<ChatScreen> {
             margin: const EdgeInsets.symmetric(vertical: 5),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isUser ? AppColors.primary : AppColors.surface,
+              color: isUser
+                  ? (isDark ? const Color(0xFF6D88FF) : const Color(0xFFD6E4FF))
+                  : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2)),
               borderRadius: BorderRadius.circular(12),
             ),
             child: isUser
                 ? Text(
                     msg.text,
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black,
+                      fontSize: 16,
+                    ),
                   )
                 : AnimatedTextKit(
                     isRepeatingAnimation: false,
                     animatedTexts: [
                       TyperAnimatedText(
                         msg.text,
-                        textStyle: const TextStyle(color: Colors.white70, fontSize: 16),
+                        textStyle: TextStyle(
+                          color: isDark ? Colors.white70 : Colors.black87,
+                          fontSize: 16,
+                        ),
                         speed: const Duration(milliseconds: 30),
                       ),
                     ],
@@ -157,13 +170,14 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _loadingBubble() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Align(
       alignment: Alignment.centerLeft,
       child: Container(
         margin: const EdgeInsets.symmetric(vertical: 5),
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2),
           borderRadius: BorderRadius.circular(12),
         ),
         child: AnimatedTextKit(
@@ -180,13 +194,13 @@ class _ChatScreenState extends State<ChatScreen> {
     return "${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB";
   }
 
-  Widget _buildFilePreview() {
+  Widget _buildFilePreview(bool isDark) {
     if (_selectedFileName == null) return const SizedBox.shrink();
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -197,14 +211,14 @@ class _ChatScreenState extends State<ChatScreen> {
             child: Text(
               _selectedFileName!,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, color: Colors.white),
+              style: TextStyle(fontSize: 14, color: isDark ? Colors.white : Colors.black),
             ),
           ),
           if (_selectedFileSize != null) ...[
             const SizedBox(width: 6),
             Text(
               _formatBytes(_selectedFileSize!),
-              style: const TextStyle(fontSize: 12, color: Colors.white60),
+              style: TextStyle(fontSize: 12, color: isDark ? Colors.white60 : Colors.black54),
             ),
           ],
           const SizedBox(width: 8),
@@ -216,7 +230,7 @@ class _ChatScreenState extends State<ChatScreen> {
                 _selectedFileSize = null;
               });
             },
-            child: const Icon(Icons.close, size: 18, color: Colors.white),
+            child: Icon(Icons.close, size: 18, color: isDark ? Colors.white : Colors.black),
           ),
         ],
       ),
@@ -224,35 +238,41 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildInputBar() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDark ? const Color(0xFF1E1E1E) : const Color(0xFFF5EBFF);
+    final inputColor = isDark ? const Color(0xFF2A2A2A) : Colors.white;
+    final textColor = isDark ? Colors.white : Colors.black87;
+
     return Container(
-      color: AppColors.surface,
+      color: backgroundColor,
       padding: const EdgeInsets.all(12),
       child: Column(
         children: [
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
-            child: _buildFilePreview(),
+            child: _buildFilePreview(isDark),
           ),
           Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: _inputController,
-                  style: const TextStyle(color: Colors.white),
-                  decoration: const InputDecoration(
+                  style: TextStyle(color: textColor),
+                  decoration: InputDecoration(
                     hintText: 'Type your message...',
-                    hintStyle: TextStyle(color: Colors.white54),
-                    border: OutlineInputBorder(
+                    hintStyle: TextStyle(color: isDark ? Colors.grey[400] : Colors.black54),
+                    border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(20)),
+                      borderSide: BorderSide.none,
                     ),
                     filled: true,
-                    fillColor: AppColors.surface,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    fillColor: inputColor,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                   ),
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.send, color: AppColors.secondary),
+                icon: const Icon(Icons.send, color: Colors.deepPurple),
                 onPressed: _handleSend,
               ),
             ],
@@ -261,17 +281,17 @@ class _ChatScreenState extends State<ChatScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(Icons.attach_file, color: Colors.white),
+                icon: Icon(Icons.attach_file, color: textColor),
                 onPressed: _pickFile,
               ),
               ChoiceChip(
                 label: const Text('Notes'),
                 selected: _notesButtonActive,
                 onSelected: (_) => _handleNotesButtonClick(),
-                selectedColor: Colors.blueAccent,
-                backgroundColor: Colors.white,
+                selectedColor: Colors.deepPurple,
+                backgroundColor: inputColor,
                 labelStyle: TextStyle(
-                  color: _notesButtonActive ? Colors.white : Colors.black87,
+                  color: _notesButtonActive ? Colors.white : textColor,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -282,35 +302,14 @@ class _ChatScreenState extends State<ChatScreen> {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      color: AppColors.background,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-          Text(
-            _userName.isEmpty ? "..." : _userName,
-            style: const TextStyle(
-              color: AppColors.secondary, 
-              fontSize: 16, 
-              fontWeight: FontWeight.bold
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            const AppHeader(),
             Expanded(child: _buildChatMessages()),
             _buildInputBar(),
           ],

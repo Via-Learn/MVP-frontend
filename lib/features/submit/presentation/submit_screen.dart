@@ -18,7 +18,7 @@ class SubmitPage extends StatelessWidget {
           }
 
           return Scaffold(
-            backgroundColor: AppColors.background,
+            backgroundColor: AppColors.darkBackground,
             body: SafeArea(
               child: Column(
                 children: [
@@ -62,7 +62,7 @@ class SubmitPage extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: AppColors.background,
+      color: AppColors.darkBackground,
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -97,7 +97,7 @@ class SubmitPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(

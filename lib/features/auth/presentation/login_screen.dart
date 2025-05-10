@@ -1,36 +1,19 @@
-import 'package:flutter/material.dart';
 import 'package:flutter/gestures.dart';
+import 'package:flutter/material.dart';
 import '../../../core/constants/app_theme.dart';
 import '../application/auth_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
+
   @override
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
   final _authService = AuthService();
-
   bool _isLoading = false;
   String? _errorMessage;
-
-  Future<void> _handleEmailLogin() async {
-    setState(() => _isLoading = true);
-    try {
-      final user = await _authService.loginWithEmail(_emailController.text, _passwordController.text);
-      if (user != null) {
-        await _authService.verifyUserSession(user);
-        Navigator.pushReplacementNamed(context, '/home');
-      }
-    } catch (e) {
-      setState(() => _errorMessage = e.toString());
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
 
   Future<void> _handleGoogleLogin() async {
     setState(() => _isLoading = true);
@@ -49,81 +32,105 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: colorScheme.background,
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               const SizedBox(height: 20),
-              Image.asset('assets/images/logo.png', height: 60),
+              Image.asset('assets/images/vialearnnew.png', height: 60),
+              const SizedBox(height: 12),
+              Image.asset('assets/images/vialearn2.png', height: 40),
               const SizedBox(height: 10),
-              Image.asset('assets/images/vialearn.png', width: 250, height: 50, fit: BoxFit.contain),
+              const Text(
+                'Your AI-powered learning companion.',
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
               const SizedBox(height: 30),
+
+              // 🔐 Login Section
               Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  color: const Color(0xFFF5EBFF), // soft lavender
+                  borderRadius: BorderRadius.circular(18),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black12,
+                      blurRadius: 12,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
                 ),
                 child: Column(
                   children: [
-                    const Text('Welcome Back', style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.textPrimary)),
+                    Text(
+                      'Welcome Back!',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        color: Colors.black,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    const Divider(color: Colors.black26, thickness: 1),
                     const SizedBox(height: 20),
+
                     ElevatedButton.icon(
                       onPressed: _isLoading ? null : _handleGoogleLogin,
-                      icon: Image.asset('assets/images/google.png', width: 20, height: 20),
+                      icon: Image.asset('assets/images/google.png', width: 22, height: 22),
                       label: const Text('Login with Google'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         foregroundColor: Colors.black,
                         minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 20),
-                    const Text('OR', style: TextStyle(color: AppColors.textSecondary)),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _emailController,
-                      decoration: const InputDecoration(hintText: 'Email'),
-                    ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(hintText: 'Password'),
-                    ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      onPressed: _isLoading ? null : _handleEmailLogin,
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: AppColors.primary)
-                          : const Text('Login'),
-                    ),
+
                     if (_errorMessage != null) ...[
-                      const SizedBox(height: 10),
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      const SizedBox(height: 18),
+                      Text(
+                        _errorMessage!,
+                        style: TextStyle(
+                          color: Colors.red.shade300,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
                     ],
-                    const SizedBox(height: 10),
+
+                    const SizedBox(height: 24),
                     Text.rich(
                       TextSpan(
                         text: 'Don’t have an account? ',
-                        style: const TextStyle(color: AppColors.textSecondary),
+                        style: const TextStyle(color: Colors.black54),
                         children: [
                           TextSpan(
                             text: 'Sign up',
-                            style: const TextStyle(color: AppColors.primary, fontWeight: FontWeight.bold),
-                            recognizer: TapGestureRecognizer()..onTap = () {
-                              Navigator.pushNamed(context, '/signup');
-                            },
-                          )
+                            style: const TextStyle(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => Navigator.pushNamed(context, '/signup'),
+                          ),
                         ],
                       ),
+                      textAlign: TextAlign.center,
                     ),
                   ],
                 ),
-              )
+              ),
             ],
           ),
         ),

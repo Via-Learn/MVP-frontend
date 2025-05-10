@@ -4,7 +4,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:geolocator/geolocator.dart';
-import '../../../core/constants/app_theme.dart'; // centralized colors
+import '../../../core/constants/app_theme.dart';
+import '../../../core/widgets/header.dart';
 
 class ViaHomePage extends StatefulWidget {
   const ViaHomePage({super.key});
@@ -84,93 +85,90 @@ class _ViaHomePageState extends State<ViaHomePage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _completedEvents.add(eventId);
-      _events.removeWhere((event) => event['id'] == eventId);
-      prefs.setStringList('completedEvents', _completedEvents.toList());
     });
+    await Future.delayed(const Duration(milliseconds: 300));
+    setState(() {
+      _events.removeWhere((event) => event['id'] == eventId);
+    });
+    prefs.setStringList('completedEvents', _completedEvents.toList());
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _buildHeader(),
-              const SizedBox(height: 20),
-              _buildWeatherCard(),
-              const SizedBox(height: 20),
-              const Text(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const AppHeader(),
+            const SizedBox(height: 20),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _buildWeatherCard(theme),
+            ),
+            const SizedBox(height: 28),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Text(
                 "Today's Events",
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                style: textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: theme.colorScheme.onBackground,
                 ),
               ),
-              const SizedBox(height: 10),
-              Expanded(child: _buildEventsList()),
-            ],
-          ),
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildEventsList(theme, textTheme),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildHeader() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Image.asset(
-          'assets/images/vialearn.png',
-          width: 120,
-          height: 40,
-          fit: BoxFit.contain,
-        ),
-        Text(
-          _userName.isEmpty ? "..." : _userName,
-          style: const TextStyle(
-            color: AppColors.secondary, 
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildWeatherCard() {
+  Widget _buildWeatherCard(ThemeData theme) {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: theme.shadowColor.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          const Icon(Icons.wb_sunny, size: 40, color: Colors.orange),
-          const SizedBox(width: 12),
+          const Icon(Icons.wb_sunny_rounded, size: 36, color: Colors.orange),
+          const SizedBox(width: 14),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "$_temperature°F • $_weatherDescription",
-                style: const TextStyle(
+                "${_temperature.toStringAsFixed(1)}°F • $_weatherDescription",
+                style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                  color: AppColors.textPrimary,
+                  fontSize: 16,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 _city,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  fontSize: 13,
+                  color: theme.colorScheme.onSurface.withOpacity(0.6),
                 ),
               ),
             ],
@@ -180,61 +178,60 @@ class _ViaHomePageState extends State<ViaHomePage> {
     );
   }
 
-  Widget _buildEventsList() {
+  Widget _buildEventsList(ThemeData theme, TextTheme textTheme) {
     if (_events.isEmpty) {
       return const Center(
-        child: Text(
-          "🎉 All events completed!",
-          style: TextStyle(
-            fontSize: 18,
-            color: AppColors.textPrimary,
-          ),
-        ),
+        child: Text("🎉 All events completed!", style: TextStyle(fontSize: 16)),
       );
     }
 
-    return ListView.builder(
+    return ListView.separated(
       itemCount: _events.length,
+      separatorBuilder: (_, __) => const SizedBox(height: 14),
       itemBuilder: (context, index) {
         final event = _events[index];
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Checkbox(
-                value: false,
-                onChanged: (_) => _toggleEventCompleted(event['id']),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      event['title'],
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: AppColors.textPrimary,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      "${event['start']} - ${event['end']}  •  ${event['location']}",
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+        final isChecked = _completedEvents.contains(event['id']);
+        return AnimatedOpacity(
+          opacity: isChecked ? 0.5 : 1.0,
+          duration: const Duration(milliseconds: 300),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: theme.cardColor,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Row(
+              children: [
+                Checkbox(
+                  value: false,
+                  onChanged: (_) => _toggleEventCompleted(event['id']),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  side: BorderSide(color: theme.colorScheme.outline),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        event['title'],
+                        style: textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: theme.colorScheme.onSurface,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${event['start']} – ${event['end']}  •  ${event['location']}",
+                        style: textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },

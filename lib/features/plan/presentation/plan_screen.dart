@@ -83,7 +83,7 @@ class _PlanPageState extends State<PlanPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.darkSurface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -123,7 +123,7 @@ class _PlanPageState extends State<PlanPage> {
   Widget _buildHeader() {
   return Container(
     padding: const EdgeInsets.all(16),
-    color: AppColors.background,
+    color: AppColors.darkBackground,
     child: Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -145,7 +145,7 @@ class _PlanPageState extends State<PlanPage> {
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.all(12),
-      color: AppColors.surface,
+      color: AppColors.darkSurface,
       child: Row(
         children: [
           IconButton(
@@ -164,7 +164,7 @@ class _PlanPageState extends State<PlanPage> {
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: AppColors.surface,
+                fillColor: AppColors.darkSurface,
                 contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
@@ -186,7 +186,7 @@ class _PlanPageState extends State<PlanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.darkBackground,
       body: SafeArea(
         child: Column(
           children: [
