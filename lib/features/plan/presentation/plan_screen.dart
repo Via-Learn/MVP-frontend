@@ -2,7 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:provider/provider.dart';
 import '../../../core/constants/app_theme.dart';
+import '../../../core/providers/theme_provider.dart';
+import '../../../core/widgets/header.dart';
 import '../application/plan_service.dart';
 import '../domain/event_model.dart';
 
@@ -76,6 +79,10 @@ class _PlanPageState extends State<PlanPage> {
     });
   }
 
+  String _sanitizeText(String input) {
+    return input.replaceAll(RegExp(r'[^\x00-\x7F]'), '');
+  }
+
   Widget _buildEventCard(EventModel event) {
     final isAdded = _added.contains(event.title);
 
@@ -83,7 +90,7 @@ class _PlanPageState extends State<PlanPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -93,17 +100,18 @@ class _PlanPageState extends State<PlanPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  event.title,
-                  style: const TextStyle(
+                  _sanitizeText(event.title),
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                     fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   "${event.type} — ${event.date}",
-                  style: const TextStyle(fontSize: 14, color: Colors.white60),
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
               ],
             ),
@@ -111,7 +119,7 @@ class _PlanPageState extends State<PlanPage> {
           IconButton(
             icon: Icon(
               isAdded ? Icons.check_circle : Icons.add_circle_outline,
-              color: isAdded ? Colors.green : AppColors.primary,
+              color: isAdded ? Colors.green : Theme.of(context).colorScheme.primary,
             ),
             onPressed: isAdded ? null : () => _addToCalendar(event),
           ),
@@ -120,52 +128,30 @@ class _PlanPageState extends State<PlanPage> {
     );
   }
 
-  Widget _buildHeader() {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    color: AppColors.darkBackground,
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-        Text(
-          _userName.isEmpty ? "..." : _userName,
-          style: TextStyle(
-            color: AppColors.secondary, 
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
   Widget _buildInputBar() {
     return Container(
       padding: const EdgeInsets.all(12),
-      color: AppColors.darkSurface,
+      color: Theme.of(context).colorScheme.surface,
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.attach_file, color: Colors.white),
+            icon: Icon(Icons.attach_file, color: Theme.of(context).colorScheme.onSurface),
             onPressed: _pickAndUploadFile,
           ),
           const SizedBox(width: 8),
-          const Expanded(
+          Expanded(
             child: TextField(
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Upload a schedule to plan...',
-                hintStyle: TextStyle(color: Colors.white54),
-                border: OutlineInputBorder(
+                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+                border: const OutlineInputBorder(
                   borderRadius: BorderRadius.all(Radius.circular(20)),
                   borderSide: BorderSide.none,
                 ),
                 filled: true,
-                fillColor: AppColors.darkSurface,
-                contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                fillColor: Theme.of(context).colorScheme.surface,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
             ),
           ),
@@ -186,11 +172,11 @@ class _PlanPageState extends State<PlanPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.darkBackground,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
-            _buildHeader(),
+            const AppHeader(),
             Expanded(child: _buildEventList()),
             _buildInputBar(),
           ],
