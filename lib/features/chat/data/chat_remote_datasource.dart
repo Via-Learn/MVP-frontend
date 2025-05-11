@@ -15,26 +15,65 @@ class ChatRemoteDataSource {
   }
 
   Future<ChatMessage> sendMessage(String message, bool ragEnabled) async {
-    final endpoint = ragEnabled
-        ? ApiRoutes.LLM_POST_RAG
-        : ApiRoutes.LLM_POST_CHAT;
+  final endpoint = ragEnabled
+      ? ApiRoutes.LLM_POST_RAG
+      : ApiRoutes.LLM_POST_CHAT;
 
+  try {
     final response = await _backend.post(endpoint, body: {'user_input': message});
+    print('📡 Response status: ${response.statusCode}');
+    print('📩 Raw body: ${response.body}');
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
+      print(data);
+      print('🧾 Assistant reply: ${data['assistant_reply']}');
+      print('📚 Citations: ${data['citations']}');
+
+      print('🧾 Decoded JSON: $data');
+
+      final botReply = data['assistant_reply'] ?? data['response'] ?? '';
+
+      if (botReply.trim().isEmpty) {
+        print('❗ Warning: Empty bot reply text');
+      }
+
+      final rawCitations = data['citations'];
+      List<String> parsedCitations = [];
+
+      if (rawCitations is String) {
+        parsedCitations = rawCitations
+            .split('\n')
+            .map((e) => e.trim())
+            .where((e) => e.isNotEmpty)
+            .toList();
+      } else if (rawCitations is List) {
+        parsedCitations = List<String>.from(rawCitations);
+      }
+
       return ChatMessage(
-        text: data['assistant_reply'] ?? "🤖 No response.",
+        text: botReply.isEmpty ? "🤖 No reply received." : botReply,
         sender: 'bot',
-        sources: List<String>.from(data['citations'] ?? []),
+        sources: parsedCitations,
       );
+
     } else {
+      print('❌ Server error: ${response.statusCode}');
       return ChatMessage(
-        text: "⚠️ Error ${response.statusCode}: ${response.body}",
+        text: "⚠️ Server error: ${response.statusCode}",
         sender: 'bot',
       );
     }
+  } catch (e, stackTrace) {
+    print('💥 Exception: $e');
+    print(stackTrace);
+    return ChatMessage(
+      text: "🚨 Error occurred while sending message.",
+      sender: 'bot',
+    );
   }
+}
+
 
   Future<ChatMessage> uploadFile(File file) async {
     final fileName = file.path.split('/').last;

@@ -47,39 +47,49 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _handleSend() async {
-    final text = _inputController.text.trim();
-    if (text.isEmpty && _selectedFile == null) return;
+  final text = _inputController.text.trim();
+  if (text.isEmpty && _selectedFile == null) return;
 
-    if (text.isNotEmpty) {
-      setState(() {
-        _messages.add(ChatMessage(text: text, sender: 'user'));
-        _isLoading = true;
-      });
-    }
-
-    _inputController.clear();
-    _scrollToBottom();
-
-    if (_selectedFile != null) {
-      final response = await _chatService.uploadPDF(_selectedFile!);
-      setState(() {
-        _messages.add(response);
-        _selectedFile = null;
-        _selectedFileName = null;
-        _selectedFileSize = null;
-      });
-      _scrollToBottom();
-    }
-
-    if (text.isNotEmpty) {
-      final response = await _chatService.send(text, _ragEnabled);
-      setState(() {
-        _messages.add(response);
-        _isLoading = false;
-      });
-      _scrollToBottom();
-    }
+  if (text.isNotEmpty) {
+    setState(() {
+      _messages.add(ChatMessage(text: text, sender: 'user'));
+      _isLoading = true;
+    });
   }
+
+  _inputController.clear();
+  _scrollToBottom();
+
+  if (_selectedFile != null) {
+    final response = await _chatService.uploadPDF(_selectedFile!);
+
+    // ✅ Only show error or important upload messages
+    final normalizedText = response.text.toLowerCase();
+    if (!normalizedText.contains("uploaded successfully")) {
+      setState(() {
+        _messages.add(response);
+      });
+    }
+
+    setState(() {
+      _selectedFile = null;
+      _selectedFileName = null;
+      _selectedFileSize = null;
+    });
+
+    _scrollToBottom();
+  }
+
+  if (text.isNotEmpty) {
+    // final response = await _chatService.send(text, _ragEnabled);
+    final response = await _chatService.send(text, _notesButtonActive);
+    setState(() {
+      _messages.add(response);
+      _isLoading = false;
+    });
+    _scrollToBottom();
+  }
+}
 
   Future<void> _pickFile() async {
     final result = await FilePicker.platform.pickFiles(type: FileType.custom, allowedExtensions: ['pdf']);
@@ -120,54 +130,121 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   Widget _buildChatMessages() {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.all(10),
-      itemCount: _messages.length + (_isLoading ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (_isLoading && index == _messages.length) return _loadingBubble();
+  final isDark = Theme.of(context).brightness == Brightness.dark;
 
-        final msg = _messages[index];
-        final isUser = msg.sender == 'user';
+  return ListView.builder(
+    controller: _scrollController,
+    padding: const EdgeInsets.all(10),
+    itemCount: _messages.length + (_isLoading ? 1 : 0),
+    itemBuilder: (context, index) {
+      if (_isLoading && index == _messages.length) return _loadingBubble();
 
-        return Align(
-          alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 5),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: isUser
-                  ? (isDark ? const Color(0xFF6D88FF) : const Color(0xFFD6E4FF))
-                  : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2)),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: isUser
-                ? Text(
-                    msg.text,
-                    style: TextStyle(
-                      color: isDark ? Colors.white : Colors.black,
-                      fontSize: 16,
-                    ),
-                  )
-                : AnimatedTextKit(
-                    isRepeatingAnimation: false,
-                    animatedTexts: [
-                      TyperAnimatedText(
-                        msg.text,
-                        textStyle: TextStyle(
-                          color: isDark ? Colors.white70 : Colors.black87,
-                          fontSize: 16,
-                        ),
-                        speed: const Duration(milliseconds: 30),
-                      ),
-                    ],
-                  ),
+      final msg = _messages[index];
+      final isUser = msg.sender == 'user';
+
+      return Align(
+        alignment: isUser ? Alignment.centerRight : Alignment.centerLeft,
+        child: Container(
+          margin: const EdgeInsets.symmetric(vertical: 5),
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: isUser
+                ? (isDark ? const Color(0xFF6D88FF) : const Color(0xFFD6E4FF))
+                : (isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2)),
+            borderRadius: BorderRadius.circular(12),
           ),
-        );
-      },
-    );
-  }
+          child: isUser
+              ? Text(
+                  msg.text,
+                  style: TextStyle(
+                    color: isDark ? Colors.white : Colors.black,
+                    fontSize: 16,
+                  ),
+                )
+              : Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: MarkdownBody(
+                            data: msg.text,
+                            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
+                              p: TextStyle(
+                                color: isDark ? Colors.white70 : Colors.black87,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.copy, size: 18, color: isDark ? Colors.white60 : Colors.black54),
+                          onPressed: () {
+                            Clipboard.setData(ClipboardData(text: msg.text));
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(
+                                content: Text('Copied to clipboard!'),
+                                duration: Duration(seconds: 1),
+                              ),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                    if (msg.sources != null && msg.sources!.isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          const Icon(Icons.menu_book_rounded, size: 16, color: Colors.deepPurple),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () {
+                              showDialog(
+                                context: context,
+                                builder: (_) => AlertDialog(
+                                  title: const Text('Sources'),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: msg.sources!.map((source) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(bottom: 6),
+                                        child: Text("• $source", style: const TextStyle(fontSize: 14)),
+                                      );
+                                    }).toList(),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.of(context).pop(),
+                                      child: const Text('Close'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: const Text(
+                              'View sources',
+                              style: TextStyle(
+                                color: Colors.deepPurple,
+                                fontWeight: FontWeight.w500,
+                                decoration: TextDecoration.underline,
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ]
+                  ],
+                ),
+        ),
+      );
+    },
+  );
+}
+
+
+
 
   Widget _loadingBubble() {
     final isDark = Theme.of(context).brightness == Brightness.dark;
