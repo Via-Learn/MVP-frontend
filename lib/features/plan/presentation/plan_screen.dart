@@ -21,22 +21,6 @@ class _PlanPageState extends State<PlanPage> {
   final ScrollController _scrollController = ScrollController();
   final Set<String> _added = {};
   List<EventModel> _events = [];
-  String _userName = "";
-
-  @override
-  void initState() {
-    super.initState();
-    _loadUserName();
-  }
-
-  Future<void> _loadUserName() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      setState(() {
-        _userName = user.displayName ?? "User";
-      });
-    }
-  }
 
   Future<void> _pickAndUploadFile() async {
     final result = await FilePicker.platform.pickFiles(
@@ -86,86 +70,57 @@ class _PlanPageState extends State<PlanPage> {
   Widget _buildEventCard(EventModel event) {
     final isAdded = _added.contains(event.title);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  _sanitizeText(event.title),
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  "${event.type} — ${event.date}",
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-              ],
-            ),
+    return Card(
+      elevation: 3,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      margin: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+      child: ListTile(
+        title: Text(
+          _sanitizeText(event.title),
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text("${event.type} — ${event.date}"),
+        trailing: IconButton(
+          icon: Icon(
+            isAdded ? Icons.check_circle : Icons.add_circle_outline,
+            color: isAdded ? Colors.green : Theme.of(context).colorScheme.primary,
           ),
-          IconButton(
-            icon: Icon(
-              isAdded ? Icons.check_circle : Icons.add_circle_outline,
-              color: isAdded ? Colors.green : Theme.of(context).colorScheme.primary,
-            ),
-            onPressed: isAdded ? null : () => _addToCalendar(event),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInputBar() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      color: Theme.of(context).colorScheme.surface,
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(Icons.attach_file, color: Theme.of(context).colorScheme.onSurface),
-            onPressed: _pickAndUploadFile,
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: TextField(
-              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-              decoration: InputDecoration(
-                hintText: 'Upload a schedule to plan...',
-                hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(20)),
-                  borderSide: BorderSide.none,
-                ),
-                filled: true,
-                fillColor: Theme.of(context).colorScheme.surface,
-                contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              ),
-            ),
-          ),
-        ],
+          onPressed: isAdded ? null : () => _addToCalendar(event),
+        ),
+        onTap: () => _addToCalendar(event),
       ),
     );
   }
 
   Widget _buildEventList() {
+    if (_events.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.symmetric(vertical: 32.0),
+          child: Text("📄 Upload a PDF schedule to view events."),
+        ),
+      );
+    }
     return ListView.builder(
       controller: _scrollController,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(bottom: 80),
       itemCount: _events.length,
       itemBuilder: (context, index) => _buildEventCard(_events[index]),
+    );
+  }
+
+  Widget _buildUploadSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+      child: ElevatedButton.icon(
+        onPressed: _pickAndUploadFile,
+        icon: const Icon(Icons.upload_file),
+        label: const Text('Upload Schedule PDF'),
+        style: ElevatedButton.styleFrom(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        ),
+      ),
     );
   }
 
@@ -177,8 +132,8 @@ class _PlanPageState extends State<PlanPage> {
         child: Column(
           children: [
             const AppHeader(),
+            _buildUploadSection(),
             Expanded(child: _buildEventList()),
-            _buildInputBar(),
           ],
         ),
       ),
