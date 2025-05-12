@@ -20,18 +20,38 @@ class ExploreScreen extends StatelessWidget {
               height: 150,
             ),
             const SizedBox(height: 30),
-            // ➡️ wordmark (change based on theme)
-            Image.asset(
-              'assets/images/vialearn2.png', // 👈 your black wordmark
-              width: 300,
-              height: 80,
-              fit: BoxFit.contain,
+
+            // ➡️ wordmark with shadow (via Stack)
+            Stack(
+              children: [
+                // Shadow layer
+                Positioned(
+                  top: 3,
+                  left: 3,
+                  child: Image.asset(
+                    'assets/images/vialearn2.png',
+                    width: 300,
+                    height: 80,
+                    color: Colors.black.withOpacity(0.25),
+                  ),
+                ),
+                // Actual logo
+                Image.asset(
+                  'assets/images/vialearn2.png',
+                  width: 300,
+                  height: 80,
+                  fit: BoxFit.contain,
+                ),
+              ],
             ),
+
             const SizedBox(height: 50),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
                 foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
               onPressed: () => Navigator.pushNamed(context, '/signup'),
               child: const Text(
