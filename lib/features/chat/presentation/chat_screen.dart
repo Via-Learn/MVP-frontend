@@ -8,6 +8,8 @@ import 'package:file_picker/file_picker.dart';
 import '../../../core/widgets/header.dart';
 import '../application/chat_service.dart';
 import '../domain/chat_message_model.dart';
+import 'package:vialearn_flutter/core/widgets/animated_markdown_message.dart';
+
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -168,15 +170,13 @@ class _ChatScreenState extends State<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                          child: MarkdownBody(
-                            data: msg.text,
-                            styleSheet: MarkdownStyleSheet.fromTheme(Theme.of(context)).copyWith(
-                              p: TextStyle(
+                            child: AnimatedMarkdownMessage(
+                              fullText: msg.text,
+                              style: TextStyle(
                                 color: isDark ? Colors.white70 : Colors.black87,
                                 fontSize: 16,
                               ),
                             ),
-                          ),
                         ),
                         IconButton(
                           icon: Icon(Icons.copy, size: 18, color: isDark ? Colors.white60 : Colors.black54),
