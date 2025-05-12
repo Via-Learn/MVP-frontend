@@ -10,6 +10,9 @@ import 'features/auth/presentation/explore_screen.dart';
 import 'features/auth/presentation/signup_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/chat/presentation/chat_screen.dart';
+import 'features/profile/presentation/profile_screen.dart';
+import 'features/grade/presentation/grade_screen.dart';
+import 'features/plan/presentation/plan_screen.dart';
 import 'navigation/home_shell.dart';
 
 void main() async {
@@ -42,6 +45,9 @@ class MyApp extends StatelessWidget {
               '/login': (context) => const LoginScreen(),
               '/chat': (context) => const ChatScreen(),
               '/home': (context) => const HomeShell(),
+              '/profile': (context) => const ProfileScreen(),
+              '/grade': (context) => const ViaGradePage(),
+              '/plan' : (context) => const PlanPage(),
             },
           );
         },

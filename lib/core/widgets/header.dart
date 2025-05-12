@@ -20,12 +20,16 @@ class AppHeader extends StatelessWidget {
           Image.asset('assets/images/vialearn2.png', width: 120, height: 40),
           Row(
             children: [
-              Text(
-                userName,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
+              GestureDetector(
+                onTap: () => Navigator.pushNamed(context, '/profile'),
+                child: Text(
+                  userName,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                    decoration: TextDecoration.underline,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
