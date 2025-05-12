@@ -34,4 +34,6 @@ class ApiRoutes {
 
   static const String GOOGLE_GET_REAUTH_URL = "/google/reauth-url";
   static const String GOOGLE_GET_OAUTH_CALLBACK = "/google/oauth2/callback";
+
+  static const String AUTOGRADE = "/autograde";
 }

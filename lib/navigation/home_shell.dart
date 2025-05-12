@@ -3,6 +3,7 @@ import '../core/constants/app_theme.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/home/presentation/home_screen.dart';
 import '../features/plan/presentation/plan_screen.dart'; // PlanPage
+import '../features/grade/presentation/grade_screen.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -15,9 +16,10 @@ class _HomeShellState extends State<HomeShell> {
   int _selectedIndex = 0; // start on ViaChat
 
   final List<Widget> _pages = [
-    const ChatScreen(),   // index 0
-    const ViaHomePage(),  // index 1
+    const ViaHomePage(), // index 0
+    const ChatScreen(),  // index 1
     const PlanPage(),     // index 2
+    const ViaGradePage(),
   ];
 
   void _onTabTapped(int index) {
@@ -37,16 +39,20 @@ class _HomeShellState extends State<HomeShell> {
         unselectedItemColor: Colors.grey,
         items: const [
           BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'ViaChat',
-          ),
-          BottomNavigationBarItem(
             icon: Icon(Icons.home),
             label: 'ViaHome',
           ),
           BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'ViaChat',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(Icons.calendar_today),
             label: 'ViaPlan',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.assignment_rounded),
+            label: 'ViaGrade',
           ),
         ],
       ),
