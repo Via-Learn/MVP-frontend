@@ -62,13 +62,11 @@ class BackendClient {
 class AuthHelpers {
   static Future<String> getFreshIdToken() async {
     final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception('User not logged in');
-    }
+    if (user == null) throw Exception('User not logged in');
     final idToken = await user.getIdToken(true);
-    if (idToken == null) {
-      throw Exception('Failed to retrieve ID token');
-    }
-    return idToken;
+    
+    print("🔐 JWT Token: $idToken"); // ✅ DEBUG ONLY
+    return idToken!;
   }
 }
+

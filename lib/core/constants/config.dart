@@ -1,2 +1,2 @@
 // config.dart
-const String baseUrl = "http://localhost:8000";
+const String baseUrl = "https://viaveri-backend-633306289314.us-central1.run.app";

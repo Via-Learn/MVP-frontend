@@ -1,14 +1,12 @@
-// auth_remote_datasource.dart
 import 'dart:convert';
 import '../../../core/constants/routes.dart';
-import '../../../core/network/backend_client.dart';  // backend wrapper
+import '../../../core/network/backend_client.dart';
 
 class AuthRemoteDataSource {
   final BackendClient _backend = BackendClient();
 
   Future<Map<String, dynamic>> getUserData(String jwt) async {
-    final response = await _backend.get(ApiRoutes.USERDB_GET_ME);
-
+    final response = await _backend.get(ApiRoutes.USERDB_GET_ME); // ✅ no headers
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
     } else {
@@ -23,7 +21,7 @@ class AuthRemoteDataSource {
         "username": username,
         "profile": {"name": username, "role": "student"},
       },
-    );
+    ); // ✅ no headers
 
     if (response.statusCode != 200) {
       throw Exception("User creation failed: ${response.body}");

@@ -26,6 +26,7 @@ class ApiRoutes {
 
   static const String EVENTS_POST_EXTRACT = "/events/extract";
   static const String EVENTS_POST_CREATE = "/events/create";
+  static const String EVENTS_POST_READ = "/events/day";
 
   static const String LMS_GET_COURSES = "/lms/courses";
   static const String LMS_GET_ASSIGNMENTS = "/lms/assignments/course_id";
