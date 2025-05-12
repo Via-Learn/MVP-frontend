@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:vialearn_flutter/core/constants/routes.dart';
+import '../../../core/constants/config.dart';
 import '../../../core/providers/theme_provider.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -20,7 +22,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
       builder: (_) => SafeArea(
         child: Wrap(
           children: [
@@ -52,12 +56,62 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  Future<void> _confirmDeleteAccount() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Are you sure?"),
+        content: const Text("This action cannot be undone. Your account will be permanently deleted."),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text("Yes, delete"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirmed == true) {
+      await _deleteAccount();
+    }
+  }
+
+  Future<void> _deleteAccount() async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      final token = await user?.getIdToken();
+      final uri = Uri.parse('$baseUrl${ApiRoutes.USERDB_DELETE_DELETE}');
+
+      final response = await HttpClient().deleteUrl(uri)
+        ..headers.set('Authorization', 'Bearer $token');
+      final result = await response.close();
+
+      if (result.statusCode == 200) {
+        await FirebaseAuth.instance.signOut();
+        if (!mounted) return;
+        Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+      } else {
+        throw Exception("Delete failed with status ${result.statusCode}");
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Failed to delete account: $e")),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final themeProvider = Provider.of<ThemeProvider>(context);
-    final isDark = themeProvider.themeMode == ThemeMode.dark;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
 
     return Scaffold(
       appBar: AppBar(
@@ -94,7 +148,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: theme.colorScheme.primary,
                       ),
                       child: const Icon(Icons.edit, size: 18, color: Colors.white),
                     ),
@@ -109,27 +163,49 @@ class _ProfileScreenState extends State<ProfileScreen> {
             const SizedBox(height: 32),
             Align(
               alignment: Alignment.centerLeft,
-              child: Text("App Theme", style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+              child: Text(
+                "App Theme",
+                style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+              ),
             ),
             const SizedBox(height: 12),
             _buildThemeSelector(themeProvider),
             const SizedBox(height: 40),
-            SizedBox(
-              width: 180,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  FirebaseAuth.instance.signOut();
-                  Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
-                },
-                icon: const Icon(Icons.logout),
-                label: const Text("Logout"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.error,
-                  foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            Column(
+              children: [
+                SizedBox(
+                  width: 200,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      FirebaseAuth.instance.signOut();
+                      Navigator.pushNamedAndRemoveUntil(context, '/login', (_) => false);
+                    },
+                    icon: const Icon(Icons.logout),
+                    label: const Text("Logout"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.error,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: 200,
+                  child: ElevatedButton.icon(
+                    onPressed: _confirmDeleteAccount,
+                    icon: const Icon(Icons.delete_forever),
+                    label: const Text("Delete Account"),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red.shade700,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -174,9 +250,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           color: color,
           border: Border.all(color: selected ? Colors.blue : Colors.grey.shade600, width: 2),
         ),
-        child: selected
-            ? const Icon(Icons.check, size: 18, color: Colors.blue)
-            : null,
+        child: selected ? const Icon(Icons.check, size: 18, color: Colors.blue) : null,
       ),
     );
   }

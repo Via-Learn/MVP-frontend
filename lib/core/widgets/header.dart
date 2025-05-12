@@ -10,6 +10,7 @@ class AppHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final user = FirebaseAuth.instance.currentUser;
     final userName = user?.displayName ?? "User";
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Container(
       padding: const EdgeInsets.all(16),
@@ -25,10 +26,9 @@ class AppHeader extends StatelessWidget {
                 child: Text(
                   userName,
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.primary,
+                    color: isDarkMode ? Colors.white : Colors.black,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
-                    decoration: TextDecoration.underline,
                   ),
                 ),
               ),
