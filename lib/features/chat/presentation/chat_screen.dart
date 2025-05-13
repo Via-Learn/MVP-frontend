@@ -27,6 +27,8 @@ class _ChatScreenState extends State<ChatScreen> {
   bool _ragEnabled = false;
   bool _isLoading = false;
   String _userName = "";
+  bool _isUploadingFile = false;
+
 
   bool _notesButtonActive = false;
   File? _selectedFile;
@@ -63,24 +65,26 @@ class _ChatScreenState extends State<ChatScreen> {
   _scrollToBottom();
 
   if (_selectedFile != null) {
+    setState(() => _isUploadingFile = true);
+    _scrollToBottom();
+
     final response = await _chatService.uploadPDF(_selectedFile!);
 
-    // ✅ Only show error or important upload messages
-    final normalizedText = response.text.toLowerCase();
-    if (!normalizedText.contains("uploaded successfully")) {
-      setState(() {
-        _messages.add(response);
-      });
-    }
-
     setState(() {
+      _isUploadingFile = false;
       _selectedFile = null;
       _selectedFileName = null;
       _selectedFileSize = null;
+
+      final normalizedText = response.text.toLowerCase();
+      if (!normalizedText.contains("uploaded successfully")) {
+        _messages.add(response);
+      }
     });
 
     _scrollToBottom();
   }
+
 
   if (text.isNotEmpty) {
     // final response = await _chatService.send(text, _ragEnabled);
@@ -137,9 +141,45 @@ class _ChatScreenState extends State<ChatScreen> {
   return ListView.builder(
     controller: _scrollController,
     padding: const EdgeInsets.all(10),
-    itemCount: _messages.length + (_isLoading ? 1 : 0),
+    itemCount: _messages.length + (_isUploadingFile ? 1 : 0) + (_isLoading ? 1 : 0),
     itemBuilder: (context, index) {
-      if (_isLoading && index == _messages.length) return _loadingBubble();
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      // Show "Uploading file..." indicator
+      if (_isUploadingFile && index == _messages.length) {
+        return Align(
+          alignment: Alignment.centerLeft,
+          child: Container(
+            margin: const EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: isDark ? const Color(0xFF2A2A2A) : const Color(0xFFF2F2F2),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: AnimatedTextKit(
+              animatedTexts: [
+                TyperAnimatedText(
+                  "Uploading file...",
+                  textStyle: TextStyle(
+                    fontSize: 16,
+                    fontStyle: FontStyle.italic,
+                    color: isDark ? Colors.white70 : Colors.black87,
+                  ),
+                  speed: const Duration(milliseconds: 60),
+                ),
+              ],
+              isRepeatingAnimation: false,
+              totalRepeatCount: 1,
+              pause: Duration.zero,
+            ),
+          ),
+        );
+      }
+
+      // Show "..." typing bubble
+      if (_isLoading && index == _messages.length + (_isUploadingFile ? 1 : 0)) {
+        return _loadingBubble();
+      }
 
       final msg = _messages[index];
       final isUser = msg.sender == 'user';
@@ -170,23 +210,20 @@ class _ChatScreenState extends State<ChatScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Expanded(
-                            child: AnimatedMarkdownMessage(
-                              fullText: msg.text,
-                              style: TextStyle(
-                                color: isDark ? Colors.white70 : Colors.black87,
-                                fontSize: 16,
-                              ),
+                          child: AnimatedMarkdownMessage(
+                            fullText: msg.text,
+                            style: TextStyle(
+                              color: isDark ? Colors.white70 : Colors.black87,
+                              fontSize: 16,
                             ),
+                          ),
                         ),
                         IconButton(
                           icon: Icon(Icons.copy, size: 18, color: isDark ? Colors.white60 : Colors.black54),
                           onPressed: () {
                             Clipboard.setData(ClipboardData(text: msg.text));
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Copied to clipboard!'),
-                                duration: Duration(seconds: 1),
-                              ),
+                              const SnackBar(content: Text('Copied to clipboard!'), duration: Duration(seconds: 1)),
                             );
                           },
                         ),
@@ -241,7 +278,7 @@ class _ChatScreenState extends State<ChatScreen> {
       );
     },
   );
-}
+  }
 
 
 
