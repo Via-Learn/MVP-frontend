@@ -55,16 +55,31 @@ class _ViaHomePageState extends State<ViaHomePage> {
       return;
     }
 
-    final events = await CalendarController().fetchTodayEvents(context);
+    final allEvents = await CalendarController().fetchTodayEvents(context);
+
+    final nowLocal = DateTime.now();
+    final todayStartLocal = DateTime(nowLocal.year, nowLocal.month, nowLocal.day);
+    final todayEndLocal = todayStartLocal.add(const Duration(days: 1));
+
+    final todaysEvents = allEvents.where((e) {
+      final start = e.startUtc.toLocal();
+      return start.isAfter(todayStartLocal) && start.isBefore(todayEndLocal);
+    }).toList();
+
+    final eventIds = todaysEvents.map((e) => e.id).toSet();
+
+    _completedEvents = _completedEvents.intersection(eventIds);
+    await _saveCompletedEvents();
+
     setState(() {
-      _events = events;
+      _events = todaysEvents;
       _isCalendarLinked = true;
       _loadingEvents = false;
     });
   } catch (e) {
     print("❌ Calendar load error: $e");
     setState(() {
-      _isCalendarLinked = false; // <- important fallback
+      _isCalendarLinked = false;
       _loadingEvents = false;
     });
   }
@@ -72,12 +87,22 @@ class _ViaHomePageState extends State<ViaHomePage> {
 
 
   Future<void> _loadCompletedEvents() async {
-    final prefs = await SharedPreferences.getInstance();
-    final key = "completedEvents_$_todayKey";
-    setState(() {
-      _completedEvents = (prefs.getStringList(key) ?? []).toSet();
-    });
+  final prefs = await SharedPreferences.getInstance();
+  final key = "completedEvents_$_todayKey";
+
+  // ✅ Clean up old keys
+  final allKeys = prefs.getKeys();
+  for (final k in allKeys) {
+    if (k.startsWith("completedEvents_") && k != key) {
+      await prefs.remove(k);
+    }
   }
+
+  setState(() {
+    _completedEvents = (prefs.getStringList(key) ?? []).toSet();
+  });
+}
+
 
   Future<void> _saveCompletedEvents() async {
     final prefs = await SharedPreferences.getInstance();
