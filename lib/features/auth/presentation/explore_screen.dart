@@ -5,47 +5,29 @@ class ExploreScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bool isDark = Theme.of(context).brightness == Brightness.dark;
-
     return Scaffold(
       backgroundColor: Theme.of(context).colorScheme.background,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // ➡️ icon (same for both themes)
+            // ➡️ icon
             Image.asset(
-              'assets/images/vialearnnew.png',
+              'assets/images/applogo.png',
               width: 150,
               height: 150,
             ),
-            const SizedBox(height: 30),
+            const SizedBox(height: 18),
 
-            // ➡️ wordmark with shadow (via Stack)
-            Stack(
-              children: [
-                // Shadow layer
-                Positioned(
-                  top: 3,
-                  left: 3,
-                  child: Image.asset(
-                    'assets/images/vialearn2.png',
-                    width: 300,
-                    height: 80,
-                    color: Colors.black.withOpacity(0.25),
-                  ),
-                ),
-                // Actual logo
-                Image.asset(
-                  'assets/images/vialearn2.png',
-                  width: 300,
-                  height: 80,
-                  fit: BoxFit.contain,
-                ),
-              ],
+            // ➡️ wordmark (without shadow)
+            Image.asset(
+              'assets/images/ViaLearn_Logo_Official.png',
+              width: 300,
+              height: 200,
+              fit: BoxFit.contain,
             ),
 
-            const SizedBox(height: 50),
+            const SizedBox(height: 30),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,

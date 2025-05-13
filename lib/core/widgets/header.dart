@@ -18,7 +18,7 @@ class AppHeader extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Image.asset('assets/images/vialearn2.png', width: 120, height: 40),
+          Image.asset('assets/images/ViaLearn_Logo_Official.png', width: 120, height: 40),
           Row(
             children: [
               GestureDetector(
