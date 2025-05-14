@@ -47,10 +47,15 @@ class _LoginScreenState extends State<LoginScreen> {
               const SizedBox(height: 20),
               Image.asset('assets/images/vialearnnew.png', height: 60),
               const SizedBox(height: 12),
-              Image.asset('assets/images/vialearn2.png', height: 40),
+              Image.asset(
+                'assets/images/ViaLearn_Logo_Official.png',
+                width: 260,
+                height: 80,
+                fit: BoxFit.contain,
+              ),
               const SizedBox(height: 10),
               const Text(
-                'Your AI-powered learning companion.',
+                'Your AI-powered homepage for learning.',
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 30),
