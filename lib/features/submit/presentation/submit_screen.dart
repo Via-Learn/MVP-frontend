@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../../core/widgets/header.dart';
 import '../../../core/constants/app_theme.dart';
 import '../application/submit_service.dart';
 import '../domain/assignment_model.dart';
@@ -17,15 +18,20 @@ class SubmitPage extends StatelessWidget {
             return const Center(child: CircularProgressIndicator(color: AppColors.primary));
           }
 
+          final theme = Theme.of(context);
+          final textTheme = theme.textTheme;
+          final colorScheme = theme.colorScheme;
+
           return Scaffold(
-            backgroundColor: AppColors.darkBackground,
+            backgroundColor: theme.scaffoldBackgroundColor,
             body: SafeArea(
               child: Column(
                 children: [
-                  _buildHeader(),
+                  const AppHeader(),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: ListView(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
                       children: controller.courses.map<Widget>((course) {
                         final courseId = course['id'];
                         final assignments = controller.assignmentsByCourse[courseId] ?? [];
@@ -34,17 +40,22 @@ class SubmitPage extends StatelessWidget {
                           children: [
                             Text(
                               course['name'],
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                              style: textTheme.titleMedium?.copyWith(
+                                fontWeight: FontWeight.w700,
+                                color: colorScheme.onBackground,
                               ),
                             ),
                             const SizedBox(height: 10),
                             ...List.generate(assignments.length, (index) {
-                              return _buildAssignmentCard(assignments[index], courseId, index, controller);
+                              return _buildAssignmentCard(
+                                context,
+                                assignments[index],
+                                courseId,
+                                index,
+                                controller,
+                              );
                             }),
-                            const SizedBox(height: 20),
+                            const SizedBox(height: 24),
                           ],
                         );
                       }).toList(),
@@ -59,33 +70,17 @@ class SubmitPage extends StatelessWidget {
     );
   }
 
-  Widget _buildHeader() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: AppColors.darkBackground,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Image.asset('assets/images/vialearn.png', width: 120, height: 40),
-          const Text(
-            "Divya",
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAssignmentCard(
+    BuildContext context,
     Assignment assignment,
     int courseId,
     int index,
     SubmitController controller,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
     String status = assignment.status;
     Color badgeColor = switch (status.toLowerCase()) {
       'submitted' => Colors.green,
@@ -97,7 +92,7 @@ class SubmitPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.darkSurface,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Column(
@@ -105,18 +100,16 @@ class SubmitPage extends StatelessWidget {
         children: [
           Text(
             "Assignment: ${assignment.title}",
-            style: const TextStyle(
+            style: textTheme.bodyLarge?.copyWith(
               fontWeight: FontWeight.bold,
-              fontSize: 16,
-              color: Colors.white,
+              color: colorScheme.onSurface,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             "Due: ${assignment.dueDate}",
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.white60,
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 10),

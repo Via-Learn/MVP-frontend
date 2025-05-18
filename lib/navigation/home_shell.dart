@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:vialearn_flutter/features/submit/presentation/submit_screen.dart';
 import '../core/constants/app_theme.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -20,6 +21,7 @@ class _HomeShellState extends State<HomeShell> {
     const ChatScreen(),  // index 1
     const PlanPage(),     // index 2
     const ViaGradePage(),
+    const SubmitPage(),
   ];
 
   void _onTabTapped(int index) {
@@ -53,6 +55,10 @@ class _HomeShellState extends State<HomeShell> {
           BottomNavigationBarItem(
             icon: Icon(Icons.assignment_rounded),
             label: 'ViaGrade',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.send_rounded),
+            label: 'ViaSubmit',
           ),
         ],
       ),
