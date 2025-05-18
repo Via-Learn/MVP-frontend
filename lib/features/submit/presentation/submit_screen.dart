@@ -4,9 +4,18 @@ import '../../../core/widgets/header.dart';
 import '../../../core/constants/app_theme.dart';
 import '../application/submit_service.dart';
 import '../domain/assignment_model.dart';
+import '../application/lms_controller.dart';
 
-class SubmitPage extends StatelessWidget {
+class SubmitPage extends StatefulWidget {
   const SubmitPage({super.key});
+
+  @override
+  State<SubmitPage> createState() => _SubmitPageState();
+}
+
+class _SubmitPageState extends State<SubmitPage> {
+  final List<String> _lmsOptions = ['Canvas'];
+  String _selectedLms = 'Canvas';
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +24,9 @@ class SubmitPage extends StatelessWidget {
       child: Consumer<SubmitController>(
         builder: (context, controller, _) {
           if (controller.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppColors.primary));
+            return const Center(
+              child: CircularProgressIndicator(color: AppColors.primary),
+            );
           }
 
           final theme = Theme.of(context);
@@ -28,7 +39,34 @@ class SubmitPage extends StatelessWidget {
               child: Column(
                 children: [
                   const AppHeader(),
-                  const SizedBox(height: 12),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Select LMS:',
+                          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        DropdownButton<String>(
+                          value: _selectedLms,
+                          borderRadius: BorderRadius.circular(12),
+                          items: _lmsOptions.map((String lms) {
+                            return DropdownMenuItem<String>(
+                              value: lms,
+                              child: Text(lms),
+                            );
+                          }).toList(),
+                          onChanged: (String? newValue) async {
+                            if (newValue == 'Canvas') {
+                              await LMSController().handleReauth(context);
+                            }
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(horizontal: 20),

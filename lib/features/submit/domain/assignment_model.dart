@@ -1,3 +1,4 @@
+// assignment_model.dart
 class Assignment {
   final int id;
   final String title;

@@ -32,6 +32,9 @@ class ApiRoutes {
   static const String LMS_GET_ASSIGNMENTS = "/lms/assignments/course_id";
   static const String LMS_POST_SUBMIT = "/lms/submit";
 
+  static const String CANVAS_POST_REAUTH = "/canvas/reauth-url";
+  static const String CANVAS_GET_AUTH = "/oauth2/callback";
+
   static const String GOOGLE_GET_REAUTH_URL = "/google/reauth-url";
   static const String GOOGLE_GET_OAUTH_CALLBACK = "/google/oauth2/callback";
 
