@@ -8,9 +8,28 @@ class SubmitController with ChangeNotifier {
 
   Map<int, List<Assignment>> assignmentsByCourse = {};
   List<dynamic> courses = [];
-  bool isLoading = true;
+  bool isLoading = false;
+  bool isCanvasLinked = false;
 
-  Future<void> initialize() async {
+  Future<void> checkLinkStatus() async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      isCanvasLinked = await _dataSource.isCanvasLinked();
+    } catch (e) {
+      debugPrint("❌ Link check error: $e");
+      isCanvasLinked = false;
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadCourses() async {
+    isLoading = true;
+    notifyListeners();
+
     try {
       courses = await _dataSource.fetchCourses();
       for (var course in courses) {
@@ -18,8 +37,9 @@ class SubmitController with ChangeNotifier {
         assignmentsByCourse[id] = await _dataSource.fetchAssignments(id);
       }
     } catch (e) {
-      debugPrint("❌ Init error: $e");
+      debugPrint("❌ Course load error: $e");
     }
+
     isLoading = false;
     notifyListeners();
   }
@@ -35,5 +55,26 @@ class SubmitController with ChangeNotifier {
     } catch (e) {
       debugPrint("❌ Submission error: $e");
     }
+  }
+
+  Future<void> loadCanvasCoursesIfLinked() async {
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      // Just attempt to load, and catch failure if not linked or no courses
+      courses = await _dataSource.fetchCourses();
+      for (var course in courses) {
+        final id = course['id'];
+        assignmentsByCourse[id] = await _dataSource.fetchAssignments(id);
+      }
+    } catch (e) {
+      debugPrint("❌ Canvas course load error: $e");
+      courses = [];
+      assignmentsByCourse.clear();
+    }
+
+    isLoading = false;
+    notifyListeners();
   }
 }

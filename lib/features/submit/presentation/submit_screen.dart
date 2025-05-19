@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/widgets/header.dart';
 import '../../../core/constants/app_theme.dart';
 import '../application/submit_service.dart';
@@ -19,16 +20,13 @@ class _SubmitPageState extends State<SubmitPage> {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => SubmitController()..initialize(),
-      child: Consumer<SubmitController>(
-        builder: (context, controller, _) {
-          if (controller.isLoading) {
-            return const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            );
-          }
-
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => SubmitController()),
+        ChangeNotifierProvider(create: (_) => LMSController()),
+      ],
+      child: Consumer2<SubmitController, LMSController>(
+        builder: (context, submitController, lmsController, _) {
           final theme = Theme.of(context);
           final textTheme = theme.textTheme;
           final colorScheme = theme.colorScheme;
@@ -59,7 +57,9 @@ class _SubmitPageState extends State<SubmitPage> {
                           }).toList(),
                           onChanged: (String? newValue) async {
                             if (newValue == 'Canvas') {
-                              await LMSController().handleReauth(context);
+                              await lmsController.handleReauth(context);
+                              // After successful OAuth, trigger load
+                              await submitController.loadCanvasCoursesIfLinked();
                             }
                           },
                         ),
@@ -68,36 +68,46 @@ class _SubmitPageState extends State<SubmitPage> {
                   ),
                   const SizedBox(height: 16),
                   Expanded(
-                    child: ListView(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      children: controller.courses.map<Widget>((course) {
-                        final courseId = course['id'];
-                        final assignments = controller.assignmentsByCourse[courseId] ?? [];
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              course['name'],
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.w700,
-                                color: colorScheme.onBackground,
+                    child: submitController.isLoading
+                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                        : submitController.courses.isEmpty
+                            ? Center(
+                                child: Text(
+                                  'No courses available. Please link your LMS or enroll in a Canvas course.',
+                                  style: textTheme.bodyMedium,
+                                  textAlign: TextAlign.center,
+                                ),
+                              )
+                            : ListView(
+                                padding: const EdgeInsets.symmetric(horizontal: 20),
+                                children: submitController.courses.map<Widget>((course) {
+                                  final courseId = course['id'];
+                                  final assignments = submitController.assignmentsByCourse[courseId] ?? [];
+                                  return Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        course['name'],
+                                        style: textTheme.titleMedium?.copyWith(
+                                          fontWeight: FontWeight.w700,
+                                          color: colorScheme.onBackground,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      ...List.generate(assignments.length, (index) {
+                                        return _buildAssignmentCard(
+                                          context,
+                                          assignments[index],
+                                          courseId,
+                                          index,
+                                          submitController,
+                                        );
+                                      }),
+                                      const SizedBox(height: 24),
+                                    ],
+                                  );
+                                }).toList(),
                               ),
-                            ),
-                            const SizedBox(height: 10),
-                            ...List.generate(assignments.length, (index) {
-                              return _buildAssignmentCard(
-                                context,
-                                assignments[index],
-                                courseId,
-                                index,
-                                controller,
-                              );
-                            }),
-                            const SizedBox(height: 24),
-                          ],
-                        );
-                      }).toList(),
-                    ),
                   ),
                 ],
               ),

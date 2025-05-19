@@ -51,4 +51,19 @@ class SubmitRemoteDataSource {
     final result = await FilePicker.platform.pickFiles();
     return result != null ? File(result.files.single.path!) : null;
   }
+
+  Future<bool> isCanvasLinked() async {
+    final response = await _client.get('/lms/is-canvas-linked'); // or another endpoint you define
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['linked'] == true;
+    }
+
+    if (response.statusCode == 400 && response.body.contains("No canvas credentials")) {
+      return false;
+    }
+
+    throw Exception("Failed to check Canvas link status: ${response.body}");
+  }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:vialearn_flutter/core/constants/config.dart';
 import '../data/lms_oauth_service.dart';
 
 class LMSController with ChangeNotifier {
@@ -13,7 +14,7 @@ class LMSController with ChangeNotifier {
       isLoading = true;
       notifyListeners();
       try {
-        final authUrl = await _oauthService.getCanvasReauthUrl("https://canvas.instructure.com");
+        final authUrl = await _oauthService.getCanvasReauthUrl("https://viaveri.instructure.com/");
         if (!context.mounted) return;
         await launchUrl(Uri.parse(authUrl), mode: LaunchMode.externalApplication);
       } catch (e) {

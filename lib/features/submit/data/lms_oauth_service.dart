@@ -9,9 +9,10 @@ class LMSOAuthService {
 
   LMSOAuthService({BackendClient? client}) : _client = client ?? BackendClient();
 
-  Future<String> getCanvasReauthUrl(String baseUrl) async {
+    Future<String> getCanvasReauthUrl(String canvasBaseUrl) async {
     final response = await _client.post(ApiRoutes.CANVAS_POST_REAUTH, body: {
-      "base_url": baseUrl,
+      "base_url": canvasBaseUrl,
+      "platform": "canvas", // optional if backend expects it
     });
 
     if (response.statusCode != 200) {
@@ -19,6 +20,6 @@ class LMSOAuthService {
     }
 
     final data = jsonDecode(response.body);
-    return data['auth_url']; // <- Canvas auth URL to open in browser
+    return data['auth_url'];
   }
 }
