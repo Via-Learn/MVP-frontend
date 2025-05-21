@@ -6,7 +6,7 @@ import '../data/lms_oauth_service.dart';
 class LMSController with ChangeNotifier {
   final LMSOAuthService _oauthService = LMSOAuthService();
 
-  String selectedLMS = 'Canvas'; // Default
+  String selectedLMS = 'Canvas';
   bool isLoading = false;
 
   Future<void> handleReauth(BuildContext context) async {
@@ -15,13 +15,25 @@ class LMSController with ChangeNotifier {
       notifyListeners();
       try {
         final authUrl = await _oauthService.getCanvasReauthUrl("https://viaveri.instructure.com/");
-        if (!context.mounted) return;
-        await launchUrl(Uri.parse(authUrl), mode: LaunchMode.externalApplication);
-      } catch (e) {
-        if (!context.mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Error: ${e.toString()}")),
+        final redirectUrl = Uri.parse("https://viaveri-backend-633306289314.us-central1.run.app/canvas/oauth2/callback");
+
+        // Listen for re-entry to the app after external OAuth
+        final launched = await launchUrl(
+          Uri.parse(authUrl),
+          mode: LaunchMode.externalApplication,
         );
+
+        if (!launched) throw Exception("Could not launch OAuth URL");
+
+        // When returning from browser, the user lands back in the app.
+        // You can detect this in initState of SubmitPage or trigger course loading manually.
+
+      } catch (e) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Error: ${e.toString()}")),
+          );
+        }
       } finally {
         isLoading = false;
         notifyListeners();

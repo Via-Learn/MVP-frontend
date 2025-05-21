@@ -1,11 +1,12 @@
-// features/submit/data/submit_remote_datasource.dart
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+
 import '../../../core/constants/config.dart';
 import '../../../core/constants/routes.dart';
-import '../../../core/network/backend_client.dart'; // <-- backend wrapper
+import '../../../core/network/backend_client.dart';
 import '../domain/assignment_model.dart';
 
 class SubmitRemoteDataSource {
@@ -24,6 +25,8 @@ class SubmitRemoteDataSource {
   Future<List<Assignment>> fetchAssignments(int courseId) async {
     final response = await _client.get('/lms/assignments/$courseId');
 
+    debugPrint('📦 Assignments response: ${response.body}');
+
     if (response.statusCode != 200) throw Exception(response.body);
 
     final jsonList = jsonDecode(response.body)['assignments'];
@@ -36,6 +39,7 @@ class SubmitRemoteDataSource {
       {
         'course_id': courseId.toString(),
         'assignment_id': assignmentId.toString(),
+        'lms_type': 'canvas', // ✅ REQUIRED
       },
       [await http.MultipartFile.fromPath('file', file.path)],
     );
@@ -50,20 +54,5 @@ class SubmitRemoteDataSource {
   Future<File?> pickFile() async {
     final result = await FilePicker.platform.pickFiles();
     return result != null ? File(result.files.single.path!) : null;
-  }
-
-  Future<bool> isCanvasLinked() async {
-    final response = await _client.get('/lms/is-canvas-linked'); // or another endpoint you define
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['linked'] == true;
-    }
-
-    if (response.statusCode == 400 && response.body.contains("No canvas credentials")) {
-      return false;
-    }
-
-    throw Exception("Failed to check Canvas link status: ${response.body}");
   }
 }

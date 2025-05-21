@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import '../../../core/widgets/header.dart';
 import '../../../core/constants/app_theme.dart';
 import '../application/submit_service.dart';
-import '../domain/assignment_model.dart';
 import '../application/lms_controller.dart';
+import '../domain/assignment_model.dart';
 
 class SubmitPage extends StatefulWidget {
   const SubmitPage({super.key});
@@ -18,102 +19,105 @@ class _SubmitPageState extends State<SubmitPage> {
   final List<String> _lmsOptions = ['Canvas'];
   String _selectedLms = 'Canvas';
 
+ @override
+void initState() {
+  super.initState();
+  // No link checks needed here — we load courses only after Canvas OAuth
+}
+
+
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => SubmitController()),
-        ChangeNotifierProvider(create: (_) => LMSController()),
-      ],
-      child: Consumer2<SubmitController, LMSController>(
-        builder: (context, submitController, lmsController, _) {
-          final theme = Theme.of(context);
-          final textTheme = theme.textTheme;
-          final colorScheme = theme.colorScheme;
+    final submitController = Provider.of<SubmitController>(context);
+    final lmsController = Provider.of<LMSController>(context);
 
-          return Scaffold(
-            backgroundColor: theme.scaffoldBackgroundColor,
-            body: SafeArea(
-              child: Column(
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+
+    return Scaffold(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: SafeArea(
+        child: Column(
+          children: [
+            const AppHeader(),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const AppHeader(),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Select LMS:',
-                          style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold),
-                        ),
-                        DropdownButton<String>(
-                          value: _selectedLms,
-                          borderRadius: BorderRadius.circular(12),
-                          items: _lmsOptions.map((String lms) {
-                            return DropdownMenuItem<String>(
-                              value: lms,
-                              child: Text(lms),
-                            );
-                          }).toList(),
-                          onChanged: (String? newValue) async {
-                            if (newValue == 'Canvas') {
-                              await lmsController.handleReauth(context);
-                              // After successful OAuth, trigger load
-                              await submitController.loadCanvasCoursesIfLinked();
-                            }
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: submitController.isLoading
-                        ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
-                        : submitController.courses.isEmpty
-                            ? Center(
-                                child: Text(
-                                  'No courses available. Please link your LMS or enroll in a Canvas course.',
-                                  style: textTheme.bodyMedium,
-                                  textAlign: TextAlign.center,
-                                ),
-                              )
-                            : ListView(
-                                padding: const EdgeInsets.symmetric(horizontal: 20),
-                                children: submitController.courses.map<Widget>((course) {
-                                  final courseId = course['id'];
-                                  final assignments = submitController.assignmentsByCourse[courseId] ?? [];
-                                  return Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        course['name'],
-                                        style: textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w700,
-                                          color: colorScheme.onBackground,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 10),
-                                      ...List.generate(assignments.length, (index) {
-                                        return _buildAssignmentCard(
-                                          context,
-                                          assignments[index],
-                                          courseId,
-                                          index,
-                                          submitController,
-                                        );
-                                      }),
-                                      const SizedBox(height: 24),
-                                    ],
-                                  );
-                                }).toList(),
-                              ),
+                  Text('Select LMS:',
+                      style: textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.bold)),
+                  DropdownButton<String>(
+                    value: _selectedLms,
+                    borderRadius: BorderRadius.circular(12),
+                    items: _lmsOptions.map((String lms) {
+                      return DropdownMenuItem<String>(
+                        value: lms,
+                        child: Text(lms),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) async {
+                      if (newValue == 'Canvas') {
+                        await lmsController.handleReauth(context);
+
+                        /// ✅ After user returns from browser, auto-load courses
+                        if (!context.mounted) return;
+                        await context.read<SubmitController>().loadCourses();
+                      }
+                    }
                   ),
                 ],
               ),
             ),
-          );
-        },
+            const SizedBox(height: 16),
+            Expanded(
+              child: submitController.isLoading
+                  ? const Center(child: CircularProgressIndicator(color: AppColors.primary))
+                  : submitController.courses.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No courses available. Please link your LMS or enroll in a Canvas course.',
+                            style: textTheme.bodyMedium,
+                            textAlign: TextAlign.center,
+                          ),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          children: submitController.courses.map<Widget>((course) {
+                            final courseId = course['id'];
+                            final assignments =
+                                submitController.assignmentsByCourse[courseId] ?? [];
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  course['name'],
+                                  style: textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: colorScheme.onBackground,
+                                  ),
+                                ),
+                                const SizedBox(height: 10),
+                                ...assignments.asMap().entries.map((entry) {
+                                  final index = entry.key;
+                                  final assignment = entry.value;
+                                  return _buildAssignmentCard(
+                                    context,
+                                    assignment,
+                                    courseId,
+                                    index,
+                                    submitController,
+                                  );
+                                }),
+                                const SizedBox(height: 24),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+            ),
+          ],
+        ),
       ),
     );
   }

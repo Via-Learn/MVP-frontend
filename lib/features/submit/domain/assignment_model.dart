@@ -1,4 +1,3 @@
-// assignment_model.dart
 class Assignment {
   final int id;
   final String title;
@@ -15,8 +14,8 @@ class Assignment {
   factory Assignment.fromJson(Map<String, dynamic> json) {
     return Assignment(
       id: json['id'],
-      title: json['title'],
-      dueDate: json['due_date'],
+      title: json['title'] ?? json['name'] ?? '(Untitled)', // ✅ Fix here
+      dueDate: json['due_date'] ?? 'No due date',
       status: json['status'] ?? 'Not Started',
     );
   }
