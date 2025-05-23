@@ -73,14 +73,19 @@ class AuthService {
     await prefs.setString('authToken', jwt);
   }
 
-  Future<void> signUpWithGoogle() async {
+  Future<void> signUpWithGoogle({required String schoolName}) async {
     final user = await loginWithGoogle();
     if (user == null) throw Exception("Google sign-up failed");
+
     final jwt = await user.getIdToken(true);
     final username = user.email!.split('@')[0];
+
     await _remote.createUser(jwt!, username);
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('internal_id', username);
     await prefs.setString('authToken', jwt);
+    await prefs.setString('school', schoolName); // ✅ save school locally
   }
+
 }

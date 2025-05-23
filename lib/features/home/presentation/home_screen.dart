@@ -197,13 +197,13 @@ class _ViaHomePageState extends State<ViaHomePage> {
               ),
             ),
             const SizedBox(height: 12),
-            Expanded(
-              child: _loadingEvents
-                  ? const Center(child: CircularProgressIndicator())
-                  : !_isCalendarLinked
-                      ? _buildConnectCalendarPrompt()
-                      : _buildEventsGrouped(pendingEvents, completedEvents, theme, textTheme),
-            ),
+            // Expanded(
+            //   child: _loadingEvents
+            //       ? const Center(child: CircularProgressIndicator())
+            //       : !_isCalendarLinked
+            //           ? _buildConnectCalendarPrompt()
+            //           : _buildEventsGrouped(pendingEvents, completedEvents, theme, textTheme),
+            // ),
           ],
         ),
       ),

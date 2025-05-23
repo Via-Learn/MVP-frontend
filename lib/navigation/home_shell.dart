@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:vialearn_flutter/features/submit/presentation/submit_screen.dart';
+// import 'package:vialearn_flutter/features/submit/presentation/submit_screen.dart';
 import '../core/constants/app_theme.dart';
 import '../features/chat/presentation/chat_screen.dart';
 import '../features/home/presentation/home_screen.dart';
@@ -8,6 +8,7 @@ import '../features/plan/presentation/plan_screen.dart'; // PlanPage
 import '../features/grade/presentation/grade_screen.dart';
 import '../features/submit/application/lms_controller.dart';
 import '../features/submit/application/submit_service.dart';
+import '../features/submit/presentation/viasubmit_notice.dart';
 
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
@@ -24,17 +25,18 @@ class _HomeShellState extends State<HomeShell> {
   const ChatScreen(),
   const PlanPage(),
   const ViaGradePage(),
+  const ViaSubmitNotice(),
 
   // ✅ Fix: delay provider access using Builder
-  Builder(
-    builder: (context) => MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => SubmitController()),
-        ChangeNotifierProvider(create: (_) => LMSController()),
-      ],
-      child: const SubmitPage(),
-    ),
-  ),
+  // Builder(
+  //   builder: (context) => MultiProvider(
+  //     providers: [
+  //       ChangeNotifierProvider(create: (_) => SubmitController()),
+  //       ChangeNotifierProvider(create: (_) => LMSController()),
+  //     ],
+  //     child: const SubmitPage(),
+  //   ),
+  // ),
 ];
 
 

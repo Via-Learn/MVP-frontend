@@ -12,13 +12,14 @@ class SignupScreen extends StatefulWidget {
 
 class _SignupScreenState extends State<SignupScreen> {
   final _authService = AuthService();
+  final _schoolController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
 
   Future<void> _handleGoogleSignUp() async {
     setState(() => _isLoading = true);
     try {
-      await _authService.signUpWithGoogle();
+      await _authService.signUpWithGoogle(schoolName: _schoolController.text);
       Navigator.pushReplacementNamed(context, '/home');
     } catch (e) {
       setState(() => _errorMessage = e.toString());
@@ -55,8 +56,6 @@ class _SignupScreenState extends State<SignupScreen> {
                 style: TextStyle(color: Colors.grey, fontSize: 14),
               ),
               const SizedBox(height: 30),
-
-              // ✨ Getting Started Section
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
@@ -83,7 +82,14 @@ class _SignupScreenState extends State<SignupScreen> {
                     const SizedBox(height: 8),
                     const Divider(color: Colors.black26, thickness: 1),
                     const SizedBox(height: 20),
-
+                    TextField(
+                      controller: _schoolController,
+                      decoration: const InputDecoration(
+                        labelText: 'School Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
                     ElevatedButton.icon(
                       onPressed: _isLoading ? null : _handleGoogleSignUp,
                       icon: Image.asset('assets/images/google.png', width: 22, height: 22),
@@ -97,7 +103,6 @@ class _SignupScreenState extends State<SignupScreen> {
                         ),
                       ),
                     ),
-
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 18),
                       Text(
@@ -110,7 +115,6 @@ class _SignupScreenState extends State<SignupScreen> {
                         textAlign: TextAlign.center,
                       ),
                     ],
-
                     const SizedBox(height: 24),
                     Text.rich(
                       TextSpan(
